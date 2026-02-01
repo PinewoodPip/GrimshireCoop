@@ -65,9 +65,10 @@ public class NetworkManager : INetEventListener
         foreach (var netObj in Plugin.NetworkedObjects.Values)
         {
             // Send create game object message
+            string objectTypeID = netObj.NetTypeID == "ClientPlayer" ? "PeerPlayer" : netObj.NetTypeID;
             SendMsg(peer.Id, new CreateGameObject
             {
-                GameObjectId = netObj.NetTypeID,
+                GameObjectId = objectTypeID,
                 NetId = netObj.netId,
                 OwnerPeerId = netObj.peerId,
                 PositionX = netObj.transform.position.x,

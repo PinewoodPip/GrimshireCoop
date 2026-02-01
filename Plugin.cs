@@ -147,7 +147,7 @@ public class Plugin : BaseUnityPlugin
 
     private static void CreateNetworkedObject(CreateGameObject createGameObjectMsg)
     {
-        NetworkedBehaviour netObj = CreateGameObjectByType(createGameObjectMsg.GameObjectId);
+        NetworkedBehaviour netObj = CreateGameObjectByType(createGameObjectMsg.GameObjectId, createGameObjectMsg.OwnerPeerId);
 
         // Initialize ownership and position
         netObj.SetPeerID(createGameObjectMsg.OwnerPeerId);
@@ -158,7 +158,7 @@ public class Plugin : BaseUnityPlugin
         NetworkedObjects[netObj.netId] = netObj;
     }
 
-    private static NetworkedBehaviour CreateGameObjectByType(string gameObjectId)
+    private static NetworkedBehaviour CreateGameObjectByType(string gameObjectId, int ownerPeerId)
     {
         Logger.LogInfo($"Creating networked GameObject {gameObjectId}");
         switch (gameObjectId)
@@ -173,23 +173,34 @@ public class Plugin : BaseUnityPlugin
 
                 return player;
             case "PeerPlayer":
-                PlayerController clientPlayer = GameManager.Instance.Player;
-                GameObject peerPlayerObj = new GameObject("Coop.NetPeerPlayer");
-                DontDestroyOnLoad(peerPlayerObj);
+                if (ownerPeerId == Plugin.ClientPeerId)
+                {
+                    // Wrap the local PlayerController with the ClientPlayer component
+                    PlayerController clientPlayer = GameManager.Instance.Player;
+                    ClientPlayer clientPlayerNetObj = clientPlayer.gameObject.AddComponent<ClientPlayer>();
+                    return clientPlayerNetObj;
+                }
+                else
+                {
+                    // Create a PeerPlayer for other peers
+                    PlayerController clientPlayer = GameManager.Instance.Player;
+                    GameObject peerPlayerObj = new GameObject("Coop.NetPeerPlayer");
+                    DontDestroyOnLoad(peerPlayerObj);
 
-                GameObject playerSprite = clientPlayer.transform.Find("PlayerSprite").gameObject;
-                GameObject peerPlayerSprite = Instantiate(playerSprite, peerPlayerObj.transform);
-                peerPlayerSprite.transform.parent = peerPlayerObj.transform;
-                peerPlayerSprite.name = "PlayerSprite";
+                    GameObject playerSprite = clientPlayer.transform.Find("PlayerSprite").gameObject;
+                    GameObject peerPlayerSprite = Instantiate(playerSprite, peerPlayerObj.transform);
+                    peerPlayerSprite.transform.parent = peerPlayerObj.transform;
+                    peerPlayerSprite.name = "PlayerSprite";
 
-                GameObject playerPlacementDetection = clientPlayer.transform.Find("PlayerPlacementDetection").gameObject;
-                GameObject peerPlayerPlacementDetection = Instantiate(playerPlacementDetection, peerPlayerObj.transform);
-                peerPlayerPlacementDetection.transform.parent = peerPlayerObj.transform;
-                peerPlayerPlacementDetection.name = "PlayerPlacementDetection";
+                    GameObject playerPlacementDetection = clientPlayer.transform.Find("PlayerPlacementDetection").gameObject;
+                    GameObject peerPlayerPlacementDetection = Instantiate(playerPlacementDetection, peerPlayerObj.transform);
+                    peerPlayerPlacementDetection.transform.parent = peerPlayerObj.transform;
+                    peerPlayerPlacementDetection.name = "PlayerPlacementDetection";
 
-                // TODO set skin
+                    // TODO set skin
 
-                return peerPlayerObj.AddComponent<PeerPlayer>();
+                    return peerPlayerObj.AddComponent<PeerPlayer>();
+                }
             default:
                 Logger.LogWarning($"Unknown GameObjectId to create: {gameObjectId}");
                 return null;
