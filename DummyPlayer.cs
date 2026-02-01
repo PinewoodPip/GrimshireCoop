@@ -27,13 +27,6 @@ public class DummyPlayer : NetworkedBehaviour
 
     public override void NetworkUpdate()
     {
-        // transform.position = GameManager.Instance.Player.transform.position;
-        // NetworkIdentity identity = GetComponent<NetworkIdentity>();
-        // Debug.Log($"DummyPlayer.Update called for player {identity.netId} (local: {identity.isLocalPlayer})");
-        // if (!identity.isLocalPlayer) return;
-
-        // TODO player check
-
         bool moved = false;
         if (Input.GetKeyDown(KeyCode.W))
         {
@@ -62,13 +55,6 @@ public class DummyPlayer : NetworkedBehaviour
     // Send position to all connected peers
     public override void Sync()
     {
-        // TODO position message
-        // writer.Reset();
-        // writer.Put(position.x);
-        // writer.Put(position.y);
-        // writer.Put(position.z);
-        
-        // server.SendToAll(writer, DeliveryMethod.ReliableOrdered);
         Debug.Log($"DummyPlayer.Sync called for netId {netId} at position {transform.position}");
         Position msg = new Position
         {

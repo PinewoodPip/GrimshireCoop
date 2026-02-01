@@ -82,7 +82,7 @@ public class NetworkManager : INetEventListener
         Transform playerTransform = playerController.transform;
         SendMsgToAll(new CreateGameObject
         {
-            GameObjectId = "DummyPlayer",
+            GameObjectId = "PeerPlayer",
             NetId = Plugin.NetworkedObjects.Count + 1,
             OwnerPeerId = peer.Id,
             PositionX = playerTransform.position.x,
@@ -119,7 +119,6 @@ public class NetworkManager : INetEventListener
         writer.Reset();
         foreach (var peer in netManager.ConnectedPeerList)
         {
-            Debug.Log($"trying to Forwarding message from {msg.OwnerPeerId} to peer {peer.Id}");
             if (peer.Id != msg.OwnerPeerId)
             {
                 msg.Serialize(writer);
@@ -156,6 +155,9 @@ public class NetworkManager : INetEventListener
         {
             case Messages.Shared.Position positionMsg:
                 ForwardMsg(positionMsg);
+                break;
+            case Messages.Shared.Movement movementMsg:
+                ForwardMsg(movementMsg);
                 break;
             default:
                 Logger.LogWarning($"Unknown message type received: {msgType}");

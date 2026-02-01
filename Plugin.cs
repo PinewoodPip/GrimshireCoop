@@ -30,6 +30,7 @@ public class Plugin : BaseUnityPlugin
         { "Server.CreatePlayer", typeof(Messages.Server.CreatePlayer) },
         { "Server.CreateGameObject", typeof(Messages.Server.CreateGameObject) },
         { "Shared.Position", typeof(Messages.Shared.Position) },
+        { "Shared.Movement", typeof(Messages.Shared.Movement) },
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
     };
 
@@ -41,9 +42,9 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(Plugin));
     }
     
-    [HarmonyPatch(typeof(GameManager), "Awake")]
+    [HarmonyPatch(typeof(GameManager), "Start")]
     [HarmonyPrefix]
-    static bool OnGameManagerAwake(GameManager __instance)
+    static bool OnGameManagerStart(GameManager __instance)
     {
         if (server != null)
         {
@@ -123,6 +124,17 @@ public class Plugin : BaseUnityPlugin
                     NetworkedBehaviour netObj = NetworkedObjects[positionMsg.NetId];
                     netObj.transform.position = new Vector3(positionMsg.PositionX, positionMsg.PositionY, positionMsg.PositionZ);
                     break;
+                case Messages.Shared.Movement movementMsg:
+                    NetworkedBehaviour movingObj = NetworkedObjects[movementMsg.NetId];
+                    
+                    // Animate - should be done before setting pos so the facing dir vector is correct
+                    if (movingObj is PeerPlayer peerPlayer)
+                    {
+                        peerPlayer.FaceTowards(new Vector2(movementMsg.NewPositionX, movementMsg.NewPositionY));
+                    }
+
+                    movingObj.transform.position = new Vector3(movementMsg.NewPositionX, movementMsg.NewPositionY, movementMsg.NewPositionZ);
+                    break;
                 default:
                     Logger.LogWarning($"Unknown message type received: {msgType}");
                     break;
@@ -160,13 +172,31 @@ public class Plugin : BaseUnityPlugin
                 dummyPlayerPrefab.SetActive(true);
 
                 return player;
+            case "PeerPlayer":
+                PlayerController clientPlayer = GameManager.Instance.Player;
+                GameObject peerPlayerObj = new GameObject("Coop.NetPeerPlayer");
+                DontDestroyOnLoad(peerPlayerObj);
+
+                GameObject playerSprite = clientPlayer.transform.Find("PlayerSprite").gameObject;
+                GameObject peerPlayerSprite = Instantiate(playerSprite, peerPlayerObj.transform);
+                peerPlayerSprite.transform.parent = peerPlayerObj.transform;
+                peerPlayerSprite.name = "PlayerSprite";
+
+                GameObject playerPlacementDetection = clientPlayer.transform.Find("PlayerPlacementDetection").gameObject;
+                GameObject peerPlayerPlacementDetection = Instantiate(playerPlacementDetection, peerPlayerObj.transform);
+                peerPlayerPlacementDetection.transform.parent = peerPlayerObj.transform;
+                peerPlayerPlacementDetection.name = "PlayerPlacementDetection";
+
+                // TODO set skin
+
+                return peerPlayerObj.AddComponent<PeerPlayer>();
             default:
                 Logger.LogWarning($"Unknown GameObjectId to create: {gameObjectId}");
                 return null;
         }
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         // Poll network events
         server?.PollEvents();

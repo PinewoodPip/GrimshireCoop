@@ -1,0 +1,109 @@
+
+using GrimshireCoop.Messages.Shared;
+using LiteNetLib;
+using LiteNetLib.Utils;
+using UnityEngine;
+
+namespace GrimshireCoop;
+
+public class PeerPlayer : NetworkedBehaviour
+{
+    public override string NetTypeID => "PeerPlayer";
+
+    public Animator animator;
+
+    private Vector3 OldPosition;
+
+    public void Awake()
+    {
+        Debug.Log("PeerPlayer awake");
+        animator = transform.Find("PlayerSprite").GetComponent<Animator>();
+    }
+
+    public void Start()
+    {
+        Debug.Log("PeerPlayer started");
+        OldPosition = transform.position;
+    }
+
+    // Copied from PlayerController
+    // TODO replace with UpdateAnim()
+    public void FaceTowards(Vector2 dir)
+    {
+		Vector2 diff = dir - (Vector2)base.transform.position;
+		animator.SetFloat("horizontal", 0f);
+		animator.SetFloat("vertical", 0f);
+		if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
+		{
+			animator.SetFloat("horizontal", (diff.x > 0f) ? 1 : (-1));
+			return;
+		}
+		animator.SetFloat("vertical", (diff.y > 0f) ? 1 : (-1));
+    }
+
+    public override void NetworkUpdate()
+    {
+        OldPosition = transform.position;
+
+        // Check for movement keys
+        bool moved = false;
+        Vector2 moveDirection = Vector2.zero;
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            moveDirection += Vector2.up;
+            transform.position += (Vector3)moveDirection;
+            moved = true;
+        }
+        else if (Input.GetKeyDown(KeyCode.S))
+        {
+            moveDirection += Vector2.down;
+            transform.position += (Vector3)moveDirection;
+            moved = true;
+        }
+        else if (Input.GetKeyDown(KeyCode.A))
+        {
+            moveDirection += Vector2.left;
+            transform.position += (Vector3)moveDirection;
+            moved = true;
+        }
+        else if (Input.GetKeyDown(KeyCode.D))
+        {
+            moveDirection += Vector2.right;
+            transform.position += (Vector3)moveDirection;
+            moved = true;
+        }
+
+        // Update animations
+        if (moved)
+        {
+            FaceTowards((Vector2)transform.position + moveDirection);
+        }
+
+        isDirty = isDirty || moved;
+    }
+
+    // Send position to all connected peers
+    public override void Sync()
+    {
+        Debug.Log($"PeerPlayer.Sync called for netId {netId} at position {transform.position}");
+        Movement msg = new()
+        {
+            OwnerPeerId = peerId,
+            NetId = netId,
+            OldPositionX = OldPosition.x,
+            OldPositionY = OldPosition.y,
+            OldPositionZ = OldPosition.z,
+            NewPositionX = transform.position.x,
+            NewPositionY = transform.position.y,
+            NewPositionZ = transform.position.z
+        };
+        SendMsg(msg);
+
+        base.Sync();
+    }
+
+    public void OnDestroy()
+    {
+        Debug.Log("PeerPlayer destroyed");
+    }
+}
