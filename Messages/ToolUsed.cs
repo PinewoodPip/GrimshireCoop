@@ -5,7 +5,7 @@ using static Message;
 
 namespace GrimshireCoop.Messages.Shared;
 
-public class ToolUsed : OwnedMessage
+public class ToolUsed : NetObjectMessage
 {
     public enum ToolType : byte
     {
@@ -23,7 +23,6 @@ public class ToolUsed : OwnedMessage
 
     public override Direction SyncDirection => Direction.ServerToClient;
 
-    public int NetId;
     public ToolType ToolId;
 
     public ToolUsed() { }
@@ -33,14 +32,12 @@ public class ToolUsed : OwnedMessage
     public override void Serialize(NetDataWriter writer)
     {
         base.Serialize(writer);
-        writer.Put(NetId);
         writer.Put((byte)ToolId);
     }
 
     public override void Deserialize(NetDataReader reader)
     {
         base.Deserialize(reader);
-        NetId = reader.GetInt();
         ToolId = (ToolType)reader.GetByte();
     }
 }

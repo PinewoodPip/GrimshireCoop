@@ -5,13 +5,11 @@ using static Message;
 
 namespace GrimshireCoop.Messages.Shared;
 
-public class FaceDirection : OwnedMessage
+public class FaceDirection : NetObjectMessage
 {
     public override string MessageType => "Shared.FaceDirection";
 
     public override Direction SyncDirection => Direction.ServerToClient;
-
-    public int NetId;
 
     // Note: this is world pos to face, not a direction
     public float PosX;
@@ -24,7 +22,6 @@ public class FaceDirection : OwnedMessage
     public override void Serialize(NetDataWriter writer)
     {
         base.Serialize(writer);
-        writer.Put(NetId);
         writer.Put(PosX);
         writer.Put(PosY);
     }
@@ -32,7 +29,6 @@ public class FaceDirection : OwnedMessage
     public override void Deserialize(NetDataReader reader)
     {
         base.Deserialize(reader);
-        NetId = reader.GetInt();
         PosX = reader.GetFloat();
         PosY = reader.GetFloat();
     }

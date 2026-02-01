@@ -5,13 +5,12 @@ using static Message;
 
 namespace GrimshireCoop.Messages.Shared;
 
-public class Position : OwnedMessage
+public class Position : NetObjectMessage
 {
     public override string MessageType => "Shared.Position";
 
     public override Direction SyncDirection => Direction.ServerToClient;
 
-    public int NetId;
     public float PositionX;
     public float PositionY;
     public float PositionZ;
@@ -23,7 +22,6 @@ public class Position : OwnedMessage
     public override void Serialize(NetDataWriter writer)
     {
         base.Serialize(writer);
-        writer.Put(NetId);
         writer.Put(PositionX);
         writer.Put(PositionY);
         writer.Put(PositionZ);
@@ -32,7 +30,6 @@ public class Position : OwnedMessage
     public override void Deserialize(NetDataReader reader)
     {
         base.Deserialize(reader);
-        NetId = reader.GetInt();
         PositionX = reader.GetFloat();
         PositionY = reader.GetFloat();
         PositionZ = reader.GetFloat();
