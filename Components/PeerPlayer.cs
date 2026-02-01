@@ -41,13 +41,45 @@ public class PeerPlayer : NetworkedBehaviour
         {
             animator.SetFloat("vertical", (diff.y > 0f) ? 1 : (-1));
         }
+    }
 
-        animator.SetBool("isWalking", true); // TODO check if we're moving or just changing facing dir
+    public void AnimateWalkTowards(Vector2 dir)
+    {
+        FaceTowards(dir);
+        animator.SetBool("isWalking", true);
     }
 
     public void OnStoppedMoving()
     {
         animator.SetBool("isWalking", false);
+    }
+
+    public void PlayToolUseAnimation(ToolUsed.ToolType toolId)
+    {
+        switch (toolId)
+        {
+            case ToolUsed.ToolType.Axe:
+                animator.SetTrigger("Axe");
+                break;
+            case ToolUsed.ToolType.Scythe:
+                animator.SetTrigger("Scythe");
+                break;
+            case ToolUsed.ToolType.Pickaxe:
+                animator.SetTrigger("Pick");
+                break;
+            case ToolUsed.ToolType.FishingRod:
+                animator.SetTrigger("FishCast"); // TODO sync FinishCast as well
+                break;
+            case ToolUsed.ToolType.Hoe:
+                animator.SetTrigger("Hoe");
+                break;
+            case ToolUsed.ToolType.WaterCan:
+                animator.SetTrigger("Water");
+                break;
+            default:
+                Debug.LogWarning($"PlayToolUseAnimation: unknown tool {toolId}");
+                break;
+        }
     }
 
     public override void NetworkUpdate()

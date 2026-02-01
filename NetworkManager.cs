@@ -163,6 +163,12 @@ public class NetworkManager : INetEventListener
             case Messages.Shared.StoppedMoving stoppedMovingMsg:
                 ForwardMsg(stoppedMovingMsg);
                 break;
+            case Messages.Shared.ToolUsed toolUsedMsg:
+                ForwardMsg(toolUsedMsg);
+                break;
+            case Messages.Shared.FaceDirection faceDirectionMsg:
+                ForwardMsg(faceDirectionMsg);
+                break;
             default:
                 Logger.LogWarning($"Unknown message type received: {msgType}");
                 break;

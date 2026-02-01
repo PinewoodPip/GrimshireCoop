@@ -4,6 +4,7 @@ using HarmonyLib;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
+using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop;
 
@@ -31,6 +32,7 @@ public class ClientPlayer : NetworkedBehaviour
         }
     }
 
+    // Sync movement
     [HarmonyPatch(typeof(PlayerMovement), "HandleMovement")]
     [HarmonyPrefix]
     static bool OnProcessInput(PlayerMovement __instance)
@@ -60,6 +62,79 @@ public class ClientPlayer : NetworkedBehaviour
             };
             clientPlayer.SendMsg(msg);
             clientPlayer.WasMoving = false;
+        }
+    }
+
+    // Sync facing dir
+    [HarmonyPatch(typeof(PlayerController), "FaceTowards")]
+    [HarmonyPostfix]
+    static void OnFaceTowards(PlayerController __instance)
+    {
+        ClientPlayer clientPlayer = __instance.GetComponent<ClientPlayer>();
+        if (clientPlayer != null)
+        {
+            Vector2 facingDir = __instance.GetInteractPosition();
+            FaceDirection msg = new()
+            {
+                OwnerPeerId = clientPlayer.peerId,
+                NetId = clientPlayer.netId,
+                PosX = facingDir.x,
+                PosY = facingDir.y
+            };
+            clientPlayer.SendMsg(msg);
+        }
+    }
+
+    // Sync tool usage
+    [HarmonyPatch(typeof(AxePlayerState), "Enter")]
+    [HarmonyPostfix]
+    static void AfterAxeUse(AxePlayerState __instance)
+    {
+        TrySendToolUse(__instance, ToolUsed.ToolType.Axe);
+    }
+    [HarmonyPatch(typeof(ScythePlayerState), "Enter")]
+    [HarmonyPostfix]
+    static void AfterScytheUse(ScythePlayerState __instance)
+    {
+        TrySendToolUse(__instance, ToolUsed.ToolType.Scythe);
+    }
+    [HarmonyPatch(typeof(HoePlayerState), "Enter")]
+    [HarmonyPostfix]
+    static void AfterHoeUse(HoePlayerState __instance)
+    {
+        TrySendToolUse(__instance, ToolUsed.ToolType.Hoe);
+    }
+    [HarmonyPatch(typeof(PickPlayerState), "Enter")]
+    [HarmonyPostfix]
+    static void AfterPickUse(PickPlayerState __instance)
+    {
+        TrySendToolUse(__instance, ToolUsed.ToolType.Pickaxe);
+    }
+    [HarmonyPatch(typeof(WateringCanPlayerState), "Enter")]
+    [HarmonyPostfix]
+    static void AfterWateringCanUse(WateringCanPlayerState __instance)
+    {
+        TrySendToolUse(__instance, ToolUsed.ToolType.WaterCan);
+    }
+    [HarmonyPatch(typeof(FishingPlayerState), "Enter")]
+    [HarmonyPostfix]
+    static void AfterFishingUse(FishingPlayerState __instance)
+    {
+        TrySendToolUse(__instance, ToolUsed.ToolType.FishingRod);
+    }
+    private static void TrySendToolUse(StateBehaviour state, ToolUsed.ToolType toolId)
+    {
+        PlayerController playerController = GetField<PlayerController>(state, "playerRef");
+        ClientPlayer clientPlayer = playerController.GetComponent<ClientPlayer>();
+        if (clientPlayer)
+        {
+            ToolUsed msg = new()
+            {
+                OwnerPeerId = clientPlayer.peerId,
+                NetId = clientPlayer.netId,
+                ToolId = toolId,
+            };
+            clientPlayer.SendMsg(msg);
         }
     }
 

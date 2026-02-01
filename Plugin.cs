@@ -32,6 +32,8 @@ public class Plugin : BaseUnityPlugin
         { "Shared.Position", typeof(Messages.Shared.Position) },
         { "Shared.Movement", typeof(Messages.Shared.Movement) },
         { "Shared.StoppedMoving", typeof(Messages.Shared.StoppedMoving) },
+        { "Shared.ToolUsed", typeof(Messages.Shared.ToolUsed) },
+        { "Shared.FaceDirection", typeof(Messages.Shared.FaceDirection) },
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
     };
 
@@ -131,7 +133,7 @@ public class Plugin : BaseUnityPlugin
                     // Animate - should be done before setting pos so the facing dir vector is correct
                     if (movingObj is PeerPlayer peerPlayer)
                     {
-                        peerPlayer.FaceTowards(new Vector2(movementMsg.NewPositionX, movementMsg.NewPositionY));
+                        peerPlayer.AnimateWalkTowards(new Vector2(movementMsg.NewPositionX, movementMsg.NewPositionY));
                     }
 
                     movingObj.transform.position = new Vector3(movementMsg.NewPositionX, movementMsg.NewPositionY, movementMsg.NewPositionZ);
@@ -141,6 +143,21 @@ public class Plugin : BaseUnityPlugin
                     if (stoppedObj is PeerPlayer stoppedPeerPlayer)
                     {
                         stoppedPeerPlayer.OnStoppedMoving();
+                    }
+                    break;
+                case Messages.Shared.ToolUsed toolUsedMsg:
+                    NetworkedBehaviour toolUserObj = NetworkedObjects[toolUsedMsg.NetId];
+                    if (toolUserObj is PeerPlayer toolUserPeerPlayer)
+                    {
+                        toolUserPeerPlayer.PlayToolUseAnimation(toolUsedMsg.ToolId);
+                    }
+                    break;
+                case Messages.Shared.FaceDirection faceDirectionMsg:
+                    NetworkedBehaviour facingObj = NetworkedObjects[faceDirectionMsg.NetId];
+                    Debug.Log($"FaceDirection message received for netId {faceDirectionMsg.NetId} dirX {faceDirectionMsg.PosX} dirY {faceDirectionMsg.PosY}");
+                    if (facingObj is PeerPlayer facingPeerPlayer)
+                    {
+                        facingPeerPlayer.FaceTowards(new Vector2(faceDirectionMsg.PosX, faceDirectionMsg.PosY));
                     }
                     break;
                 default:
