@@ -31,6 +31,7 @@ public class Plugin : BaseUnityPlugin
         { "Server.CreateGameObject", typeof(Messages.Server.CreateGameObject) },
         { "Shared.Position", typeof(Messages.Shared.Position) },
         { "Shared.Movement", typeof(Messages.Shared.Movement) },
+        { "Shared.StoppedMoving", typeof(Messages.Shared.StoppedMoving) },
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
     };
 
@@ -134,6 +135,13 @@ public class Plugin : BaseUnityPlugin
                     }
 
                     movingObj.transform.position = new Vector3(movementMsg.NewPositionX, movementMsg.NewPositionY, movementMsg.NewPositionZ);
+                    break;
+                case Messages.Shared.StoppedMoving stoppedMovingMsg:
+                    NetworkedBehaviour stoppedObj = NetworkedObjects[stoppedMovingMsg.NetId];
+                    if (stoppedObj is PeerPlayer stoppedPeerPlayer)
+                    {
+                        stoppedPeerPlayer.OnStoppedMoving();
+                    }
                     break;
                 default:
                     Logger.LogWarning($"Unknown message type received: {msgType}");

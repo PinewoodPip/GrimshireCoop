@@ -11,8 +11,11 @@ public class ClientPlayer : NetworkedBehaviour
 {
     public override string NetTypeID => "ClientPlayer";
 
+    private const float POSITION_CHANGE_THRESHOLD = 0.1f;
+
     public PlayerController player;
     public Vector3 OldPosition;
+    public bool WasMoving = false;
 
     static bool MethodsWerePatched = false;
 
@@ -42,9 +45,21 @@ public class ClientPlayer : NetworkedBehaviour
     {
         ClientPlayer clientPlayer = __instance.GetComponent<ClientPlayer>();
         Vector3 newPosition = __instance.transform.position;
-        if (newPosition != clientPlayer.OldPosition)
+        if (Vector3.Distance(newPosition, clientPlayer.OldPosition) > POSITION_CHANGE_THRESHOLD)
         {
             clientPlayer.isDirty = true;
+            clientPlayer.WasMoving = true;
+        }
+        else if (clientPlayer.WasMoving)
+        {
+            // Report stopped moving
+            StoppedMoving msg = new()
+            {
+                OwnerPeerId = clientPlayer.peerId,
+                NetId = clientPlayer.netId
+            };
+            clientPlayer.SendMsg(msg);
+            clientPlayer.WasMoving = false;
         }
     }
 

@@ -36,9 +36,18 @@ public class PeerPlayer : NetworkedBehaviour
 		if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
 		{
 			animator.SetFloat("horizontal", (diff.x > 0f) ? 1 : (-1));
-			return;
 		}
-		animator.SetFloat("vertical", (diff.y > 0f) ? 1 : (-1));
+        else
+        {
+            animator.SetFloat("vertical", (diff.y > 0f) ? 1 : (-1));
+        }
+
+        animator.SetBool("isWalking", true); // TODO check if we're moving or just changing facing dir
+    }
+
+    public void OnStoppedMoving()
+    {
+        animator.SetBool("isWalking", false);
     }
 
     public override void NetworkUpdate()

@@ -160,6 +160,9 @@ public class NetworkManager : INetEventListener
             case Messages.Shared.Movement movementMsg:
                 ForwardMsg(movementMsg);
                 break;
+            case Messages.Shared.StoppedMoving stoppedMovingMsg:
+                ForwardMsg(stoppedMovingMsg);
+                break;
             default:
                 Logger.LogWarning($"Unknown message type received: {msgType}");
                 break;
