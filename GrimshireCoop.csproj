@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>GrimshireCoop</AssemblyName>
+    <Product>Grimshire Co-op</Product>
+    <Version>0.9.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+      https://nuget.samboy.dev/v3/index.json
+    </RestoreAdditionalProjectSources>
+    <RootNamespace>GrimshireCoop</RootNamespace>
+    <Company>Team Pinewood</Company>
+    <Authors>PinewoodPip</Authors>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" IncludeAssets="compile" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+    <PackageReference Include="LiteNetLib" Version="1.3.5" PrivateAssets="none" />
+    <PackageReference Include="UnityEngine.Modules" Version="2022.3.62" IncludeAssets="compile" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>lib\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>lib\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>lib\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="YarnSpinner">
+      <HintPath>lib\YarnSpinner.dll</HintPath>
+    </Reference>
+    <Reference Include="YarnSpinner.Unity">
+      <HintPath>lib\YarnSpinner.Unity.dll</HintPath>
+    </Reference>
+    <Reference Include="Febucci.TextAnimator.Runtime">
+      <HintPath>lib\Febucci.TextAnimator.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Mirror">
+      <HintPath>lib\Mirror.dll</HintPath>
+    </Reference>
+    <Reference Include="Mirror.Components">
+      <HintPath>lib\Mirror.Components.dll</HintPath>
+    </Reference>
+    <Reference Include="Mirror.Transports">
+      <HintPath>lib\Mirror.Transports.dll</HintPath>
+    </Reference>
+    <Reference Include="Telepathy">
+      <HintPath>lib\Telepathy.dll</HintPath>
+    </Reference>
+    <!-- <Reference Include="MirrorDummy">
+      <Aliases>CustomTypes</Aliases>
+      <HintPath>lib\MirrorDummy.dll</HintPath>
+      <Private>true</Private>
+    </Reference> -->
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(TargetDir)grimshirecoop.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Grimshire\BepInEx\plugins\grimshirecoop\grimshirecoop.dll&quot;" />
+    <Exec Command="copy /Y &quot;$(TargetDir)grimshirecoop.dll&quot; &quot;C:\Users\Usuario\Documents\Games\Grimshire Copy\Grimshire\BepInEx\plugins\grimshirecoop\grimshirecoop.dll&quot;" />
+  </Target>
+</Project>
