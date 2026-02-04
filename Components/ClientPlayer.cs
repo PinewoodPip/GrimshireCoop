@@ -43,7 +43,7 @@ public class ClientPlayer : NetworkedBehaviour
     public new void Update()
     {
         base.Update();
-        if (!isLocalPlayer)
+        if (!IsLocalPlayer)
         {
             Debug.LogWarning("ClientPlayer exists on non-local player??? This should never happen.");
             return;
@@ -61,7 +61,7 @@ public class ClientPlayer : NetworkedBehaviour
         {
             OwnerPeerId = peerId,
             SceneId = newScene.name,
-            ClientPlayerNetId = Plugin.ClientPlayerNetId,
+            ClientPlayerNetId = Client.ClientPlayerNetId,
             Position = player.transform.position
         };
         SendMsg(msg);
@@ -85,7 +85,7 @@ public class ClientPlayer : NetworkedBehaviour
         Vector3 newPosition = __instance.transform.position;
         if (Vector3.Distance(newPosition, clientPlayer.OldPosition) > POSITION_CHANGE_THRESHOLD)
         {
-            clientPlayer.isDirty = true;
+            clientPlayer.IsDirty = true;
             clientPlayer.WasMoving = true;
         }
         else if (clientPlayer.WasMoving)

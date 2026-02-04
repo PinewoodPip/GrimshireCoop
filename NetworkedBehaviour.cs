@@ -10,11 +10,12 @@ public abstract class NetworkedBehaviour : MonoBehaviour
 {
     public abstract string NetTypeID { get; }
 
-    protected NetManager client => Plugin.client;
+    protected Client Client => Plugin.client;
+    public bool IsLocalPlayer { get => peerId == Plugin.client.ClientPeerId; }
+    public bool IsDirty { get; protected set; } = false;
+
     public PeerId peerId;
     public NetId netId;
-    public bool isLocalPlayer { get => peerId == Plugin.ClientPeerId; }
-    public bool isDirty { get; protected set; } = false;
 
     private bool Unregistered = false;
 
@@ -30,25 +31,25 @@ public abstract class NetworkedBehaviour : MonoBehaviour
 
     public void Update()
     {
-        if (!isLocalPlayer) return;
+        if (!IsLocalPlayer) return;
 
         NetworkUpdate();
     }
 
     public void SendMsg(Message msg)
     {
-        if (!isLocalPlayer) { Debug.LogWarning("Attempted to send message from non-local player"); return; }
+        if (!IsLocalPlayer) { Debug.LogWarning("Attempted to send message from non-local player"); return; }
 
         NetDataWriter writer = new NetDataWriter();
         msg.Serialize(writer);
-        client.FirstPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+        Client.ServerPeer.Send(writer, DeliveryMethod.ReliableOrdered);
     }
 
     public virtual void NetworkUpdate() { }
 
     public virtual void Sync()
     {
-        isDirty = false;
+        IsDirty = false;
     }
 
     private void OnDestroy()

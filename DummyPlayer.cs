@@ -50,7 +50,7 @@ public class DummyPlayer : NetworkedBehaviour
             moved = true;
         }
 
-        isDirty = isDirty || moved;
+        IsDirty = IsDirty || moved;
     }
 
     // Send position to all connected peers

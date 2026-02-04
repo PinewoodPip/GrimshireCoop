@@ -4,15 +4,8 @@ using System.Net;
 using System.Net.Sockets;
 using BepInEx;
 using BepInEx.Logging;
-using GrimshireCoop.Messages.Server;
-using GrimshireCoop.Messages.Shared;
-using GrimshireCoop.Network.Messages;
 using HarmonyLib;
-using LiteNetLib;
-using LiteNetLib.Utils;
-using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements.Collections;
 
 namespace GrimshireCoop;
 
@@ -21,14 +14,10 @@ public class Plugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger;
     internal static NetworkManager server;
-    internal static NetManager client;
+    internal static Client client;
     internal static int PORT = 9050;
     internal static PeerId serverPeerId;
-    internal static PeerId ClientPeerId;
-    internal static NetId ClientPlayerNetId;
     private static int HomeSceneLoadCount = 0;
-
-    public static string CurrentSceneID => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
     public static NetId NextFreeNetId
     {
@@ -89,7 +78,7 @@ public class Plugin : BaseUnityPlugin
 
         SceneManager.sceneLoaded += (scene, mode) =>
         {
-            LogClient($"Scene loaded: {scene.name}");
+            Logger.LogInfo($"Scene loaded: {scene.name}");
             if (scene.name == "Interior_Home_Scene")
             {
                 HomeSceneLoadCount++;
@@ -115,7 +104,8 @@ public class Plugin : BaseUnityPlugin
             manager.netManager.Start(PORT);
         }
 
-        StartClient();
+        client = new Client();
+        client.StartClient();
     }
 
     private static bool IsPortInUse(int port)
@@ -131,202 +121,6 @@ public class Plugin : BaseUnityPlugin
         {
             return true;
         }
-    }
-
-    private static void StartClient()
-    {
-        Logger.LogInfo("Starting client...");
-
-        var listener = new EventBasedNetListener();
-        var client = new NetManager(listener);
-        client.Start();
-        client.Connect("localhost", 9050, "GrimshireCoopKey");
-
-        listener.PeerConnectedEvent += (peer) =>
-        {
-            LogClient($"Client connected to server: {peer.Id}");
-            Plugin.serverPeerId = peer.Id;
-        };
-
-        listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
-        {
-            LogClient($"Received data from server: {dataReader.AvailableBytes} bytes");
-
-            var msgType = dataReader.GetString(100);
-            Type msgClass = MessageTypes[msgType];
-
-            Message msg = Activator.CreateInstance(msgClass, dataReader) as Message;
-            
-            // Handle the message
-            LogClient($"Deserialized message of type: {msg.MessageType}");
-
-            // Interest management: ignore messages from clients in other scenes)
-            if (LocalSceneMessages.Contains(msg.MessageType) && msg is OwnedMessage ownedMessage && PeerScenes[ownedMessage.OwnerPeerId] != CurrentSceneID)
-            {
-                LogClient($"Ignoring message {msg.MessageType} from peer {ownedMessage.OwnerPeerId} in scene {PeerScenes[ownedMessage.OwnerPeerId]} (current scene {CurrentSceneID})");
-                return;
-            }
-
-            // Fetch the target net object if applicable
-            NetworkedBehaviour netObj = null;
-            if (msg is NetObjectMessage netObjectMsg)
-            {
-                netObj = GetByNetID(netObjectMsg.NetId);
-            }
-
-            switch (msg)
-            {
-                case Messages.Server.AssignPeerId assignPeerIdMsg:
-                    ClientPeerId = assignPeerIdMsg.PeerId;
-                    LogClient($"Assigned Client Peer ID: {Plugin.ClientPeerId}");
-                    foreach (var kvp in assignPeerIdMsg.PeerScenes)
-                    {
-                        PeerScenes[kvp.Key] = kvp.Value;
-                        LogClient($"Peer {kvp.Key} is in scene {kvp.Value}");
-                    }
-                    break;
-                case Messages.Server.CreatePlayer createPlayerMsg:
-                    break;
-                case Messages.Shared.ReplicateObject replicateObjectMsg:
-                    LogClient($"Client received ReplicateObject message for netId {replicateObjectMsg.NetId} of type {replicateObjectMsg.GameObjectId} from peer {replicateObjectMsg.OwnerPeerId}");
-
-                    // Only replicate if the message is for this client
-                    if (replicateObjectMsg.TargetPeerId != Plugin.ClientPeerId)
-                    {
-                        LogClient($"Ignoring ReplicateObject message for peer {replicateObjectMsg.TargetPeerId} (current peer {Plugin.ClientPeerId})");
-                        break;
-                    }
-                    LogClient($"[Client] Replicating object netId {replicateObjectMsg.NetId} of type {replicateObjectMsg.GameObjectId} from peer {replicateObjectMsg.OwnerPeerId}");
-                    CreateNetworkedObject(new CreateGameObject
-                    {
-                        GameObjectId = replicateObjectMsg.GameObjectId,
-                        NetId = replicateObjectMsg.NetId,
-                        OwnerPeerId = replicateObjectMsg.OwnerPeerId,
-                        Position = replicateObjectMsg.Position
-                    });
-                    break;
-                case Messages.Server.CreateGameObject createGameObjectMsg:
-                    CreateNetworkedObject(createGameObjectMsg);
-                    break;
-                case Messages.Shared.Position positionMsg:
-                    netObj.transform.position = positionMsg.Pos;
-                    break;
-                case Messages.Shared.Movement movementMsg:
-                    // Animate - should be done before setting pos so the facing dir vector is correct
-                    if (netObj is PeerPlayer peerPlayer)
-                    {
-                        peerPlayer.AnimateWalkTowards(new Vector2(movementMsg.NewPosition.x, movementMsg.NewPosition.y));
-                    }
-
-                    netObj.transform.position = movementMsg.NewPosition;
-                    break;
-                case Messages.Shared.StoppedMoving stoppedMovingMsg:
-                    if (netObj is PeerPlayer stoppedPeerPlayer)
-                    {
-                        stoppedPeerPlayer.OnStoppedMoving();
-                    }
-                    break;
-                case Messages.Shared.ToolUsed toolUsedMsg:
-                    if (netObj is PeerPlayer toolUserPeerPlayer)
-                    {
-                        toolUserPeerPlayer.PlayToolUseAnimation(toolUsedMsg.ToolId);
-                    }
-                    break;
-                case Messages.Shared.FaceDirection faceDirectionMsg:
-                    Debug.Log($"FaceDirection message received for netId {faceDirectionMsg.NetId} dirX {faceDirectionMsg.PosX} dirY {faceDirectionMsg.PosY}");
-                    if (netObj is PeerPlayer facingPeerPlayer)
-                    {
-                        facingPeerPlayer.FaceTowards(new Vector2(faceDirectionMsg.PosX, faceDirectionMsg.PosY));
-                    }
-                    break;
-                case Messages.Shared.SceneChanged sceneChangedMsg:
-                {
-                    // Delete previous PeerPlayer
-                    PeerPlayer[] allPeers = FindObjectsOfType<PeerPlayer>();
-                    foreach (var peer in allPeers)
-                    {
-                        if (peer.peerId == sceneChangedMsg.OwnerPeerId)
-                        {
-                            Plugin.UnregisterNetObject(peer, SceneManager.GetActiveScene().name);
-                            DestroyImmediate(peer.gameObject); // TODO extract method
-                        }
-                    }
-
-                    // Recreate peer player if they moved to client's scene
-                    if (sceneChangedMsg.SceneId == CurrentSceneID)
-                    {
-                        CreateNetworkedObject(new CreateGameObject
-                        {
-                            GameObjectId = "PeerPlayer",
-                            NetId = sceneChangedMsg.ClientPlayerNetId,
-                            OwnerPeerId = sceneChangedMsg.OwnerPeerId,
-                            Position = sceneChangedMsg.Position
-                        });
-                    }
-
-                    int peerId = sceneChangedMsg.OwnerPeerId;
-                    PeerScenes[peerId] = sceneChangedMsg.SceneId;
-                    LogClient($"Peer {peerId} changed to scene {sceneChangedMsg.SceneId}");
-
-                    // Replicate owned objects to the peer
-                    foreach (var ownedObj in GetOwnedSceneObjects())
-                    {
-                        // Send create game object message
-                        string objectTypeID = ownedObj.NetTypeID == "ClientPlayer" ? "PeerPlayer" : ownedObj.NetTypeID;
-                        ReplicateObject replicateMsg = new() // TODO special type of message
-                        {
-                            OwnerPeerId = ownedObj.peerId,
-                            NetId = ownedObj.netId,
-                            GameObjectId = objectTypeID,
-                            Position = ownedObj.transform.position,
-                            SceneId = CurrentSceneID,
-                            TargetPeerId = peerId,
-                        };
-                        LogClient($"SceneChanged: Replicating object netId {ownedObj.netId} of type {objectTypeID} to peer {peerId} scene {CurrentSceneID}");
-
-                        NetDataWriter writer = new NetDataWriter();
-                        replicateMsg.Serialize(writer);
-                        fromPeer.Send(writer, DeliveryMethod.ReliableOrdered);
-                    }
-                    break;
-                }
-                default:
-                    LogClientWarning($"Unknown message type received: {msgType}");
-                    break;
-            }
-
-            dataReader.Recycle();
-        };
-        Plugin.client = client;
-    }
-
-    public static void LogClient(string message)
-    {
-        Logger.LogInfo($"[Client] {message}");
-    }
-
-    public static void LogClientWarning(string message)
-    {
-        Logger.LogWarning($"[Client] {message}");
-    }
-
-    private static void CreateNetworkedObject(CreateGameObject createGameObjectMsg)
-    {
-        NetworkedBehaviour netObj = CreateGameObjectByType(createGameObjectMsg.GameObjectId, createGameObjectMsg.OwnerPeerId);
-
-        // Initialize ownership and position
-        netObj.SetPeerID(createGameObjectMsg.OwnerPeerId);
-        netObj.netId = createGameObjectMsg.NetId;
-        netObj.transform.position = createGameObjectMsg.Position;
-
-        // Track net ID of the client player object
-        if (netObj is ClientPlayer)
-        {
-            ClientPlayerNetId = netObj.netId;
-        }
-
-        // Track it
-        RegisterNetObject(netObj, CurrentSceneID);
     }
 
     public static void ChangeNetObjectScene(NetworkedBehaviour netObj, string oldScene, string newScene)
@@ -351,12 +145,7 @@ public class Plugin : BaseUnityPlugin
 
     public static void UnregisterNetObject(NetworkedBehaviour netObj, string scene)
     {
-        // Print all keys
-        foreach (var key in NetworkedObjects.Keys)
-        {
-            Logger.LogInfo($"Registered scene: {key}, amount of objects: {NetworkedObjects[key].Count}");
-        }
-        Debug.Log($"Unregistering net object netId {netObj.netId} {netObj.name} from scene {scene}");
+        Logger.LogInfo($"Unregistering net object netId {netObj.netId} {netObj.name} from scene {scene}");
         var sceneObjects = NetworkedObjects[scene];
         if (sceneObjects.ContainsKey(netObj.netId))
         {
@@ -364,55 +153,7 @@ public class Plugin : BaseUnityPlugin
         }
         else
         {
-            LogClientWarning($"Attempted to unregister net object {netObj.netId} that is not registered in scene {scene}");
-        }
-    }
-
-    private static NetworkedBehaviour CreateGameObjectByType(string gameObjectId, int ownerPeerId)
-    {
-        Logger.LogInfo($"Creating networked GameObject {gameObjectId}");
-        switch (gameObjectId)
-        {
-            case "DummyPlayer":
-                GameObject dummyPlayerPrefab = new GameObject("Coop.NetPlayerDummyPrefab");
-                DummyPlayer player = dummyPlayerPrefab.AddComponent<DummyPlayer>();
-                SpriteRenderer renderer = dummyPlayerPrefab.AddComponent<SpriteRenderer>();
-
-                DontDestroyOnLoad(dummyPlayerPrefab);
-                dummyPlayerPrefab.SetActive(true);
-
-                return player;
-            case "PeerPlayer":
-                if (ownerPeerId == Plugin.ClientPeerId)
-                {
-                    // Wrap the local PlayerController with the ClientPlayer component
-                    PlayerController clientPlayer = GameManager.Instance.Player;
-                    ClientPlayer clientPlayerNetObj = clientPlayer.gameObject.AddComponent<ClientPlayer>();
-                    return clientPlayerNetObj;
-                }
-                else
-                {
-                    // Create a PeerPlayer for other peers
-                    PlayerController clientPlayer = GameManager.Instance.Player;
-                    GameObject peerPlayerObj = new GameObject("Coop.NetPeerPlayer");
-
-                    GameObject playerSprite = clientPlayer.transform.Find("PlayerSprite").gameObject;
-                    GameObject peerPlayerSprite = Instantiate(playerSprite, peerPlayerObj.transform);
-                    peerPlayerSprite.transform.parent = peerPlayerObj.transform;
-                    peerPlayerSprite.name = "PlayerSprite";
-
-                    GameObject playerPlacementDetection = clientPlayer.transform.Find("PlayerPlacementDetection").gameObject;
-                    GameObject peerPlayerPlacementDetection = Instantiate(playerPlacementDetection, peerPlayerObj.transform);
-                    peerPlayerPlacementDetection.transform.parent = peerPlayerObj.transform;
-                    peerPlayerPlacementDetection.name = "PlayerPlacementDetection";
-
-                    // TODO set skin
-
-                    return peerPlayerObj.AddComponent<PeerPlayer>();
-                }
-            default:
-                LogClientWarning($"Unknown GameObjectId to create: {gameObjectId}");
-                return null;
+            Logger.LogWarning($"Attempted to unregister net object {netObj.netId} that is not registered in scene {scene}");
         }
     }
 
@@ -430,11 +171,11 @@ public class Plugin : BaseUnityPlugin
 
     public static Dictionary<NetId, NetworkedBehaviour> GetCurrentSceneNetworkedObjects()
     {
-        if (!NetworkedObjects.ContainsKey(CurrentSceneID))
+        if (!NetworkedObjects.ContainsKey(Client.CurrentSceneID))
         {
-            NetworkedObjects[CurrentSceneID] = new Dictionary<NetId, NetworkedBehaviour>();
+            NetworkedObjects[Client.CurrentSceneID] = new Dictionary<NetId, NetworkedBehaviour>();
         }
-        return NetworkedObjects[CurrentSceneID];
+        return NetworkedObjects[Client.CurrentSceneID];
     }
 
     public static List<NetworkedBehaviour> GetOwnedSceneObjects()
@@ -443,7 +184,7 @@ public class Plugin : BaseUnityPlugin
         var sceneObjects = GetCurrentSceneNetworkedObjects();
         foreach (var netObj in sceneObjects.Values)
         {
-            if (netObj.peerId == ClientPeerId)
+            if (netObj.peerId == client.ClientPeerId)
             {
                 ownedObjects.Add(netObj);
             }
@@ -463,7 +204,7 @@ public class Plugin : BaseUnityPlugin
         Dictionary<NetId, NetworkedBehaviour> currentSceneObjects = GetCurrentSceneNetworkedObjects();
         foreach (var netObj in currentSceneObjects.Values)
         {
-            if (netObj.isDirty)
+            if (netObj.IsDirty)
             {
                 netObj.Sync();
             }
@@ -473,6 +214,6 @@ public class Plugin : BaseUnityPlugin
     private void OnDestroy()
     {
         server?.Stop();
-        client?.Stop();
+        client?.Dispose();
     }
 }

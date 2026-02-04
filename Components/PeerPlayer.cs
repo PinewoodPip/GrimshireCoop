@@ -121,7 +121,7 @@ public class PeerPlayer : NetworkedBehaviour
             FaceTowards((Vector2)transform.position + moveDirection);
         }
 
-        isDirty = isDirty || moved;
+        IsDirty = IsDirty || moved;
     }
 
     // Send position to all connected peers
