@@ -1,5 +1,6 @@
 
 using LiteNetLib.Utils;
+using UnityEngine;
 
 namespace GrimshireCoop.Messages.Server;
 
@@ -9,9 +10,7 @@ public class CreatePlayer : Message
 
     public override Direction SyncDirection => Direction.ServerToClient;
 
-    public float PositionX;
-    public float PositionY;
-    public float PositionZ;
+    public Vector3 Position;
 
     public CreatePlayer() { }
 
@@ -20,15 +19,11 @@ public class CreatePlayer : Message
     public override void Serialize(NetDataWriter writer)
     {
         base.Serialize(writer);
-        writer.Put(PositionX);
-        writer.Put(PositionY);
-        writer.Put(PositionZ);
+        writer.PutVector3(Position);
     }
 
     public override void Deserialize(NetDataReader reader)
     {
-        PositionX = reader.GetFloat();
-        PositionY = reader.GetFloat();
-        PositionZ = reader.GetFloat();
+        Position = reader.GetVector3();
     }
 }

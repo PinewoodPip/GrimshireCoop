@@ -1,6 +1,7 @@
 
 
 using LiteNetLib.Utils;
+using UnityEngine;
 
 namespace GrimshireCoop.Messages.Server;
 
@@ -13,9 +14,7 @@ public class CreateGameObject : Message
     public string GameObjectId;
     public NetId NetId;
     public PeerId OwnerPeerId;
-    public float PositionX;
-    public float PositionY;
-    public float PositionZ;
+    public Vector3 Position;
 
     public CreateGameObject() { }
 
@@ -27,10 +26,7 @@ public class CreateGameObject : Message
         writer.Put(GameObjectId);
         writer.Put(NetId);
         writer.Put(OwnerPeerId);
-
-        writer.Put(PositionX);
-        writer.Put(PositionY);
-        writer.Put(PositionZ);
+        writer.PutVector3(Position);
     }
 
     public override void Deserialize(NetDataReader reader)
@@ -38,9 +34,6 @@ public class CreateGameObject : Message
         GameObjectId = reader.GetString();
         NetId = reader.GetInt();
         OwnerPeerId = reader.GetInt();
-
-        PositionX = reader.GetFloat();
-        PositionY = reader.GetFloat();
-        PositionZ = reader.GetFloat();
+        Position = reader.GetVector3();
     }
 }

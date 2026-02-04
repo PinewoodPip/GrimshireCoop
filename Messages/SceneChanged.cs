@@ -1,6 +1,8 @@
 
+using GrimshireCoop.Network;
 using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
+using UnityEngine;
 using static Message;
 
 namespace GrimshireCoop.Messages.Shared;
@@ -13,9 +15,7 @@ public class SceneChanged : OwnedMessage
 
     public string SceneId;
     public NetId ClientPlayerNetId;
-    public float PositionX;
-    public float PositionY;
-    public float PositionZ;
+    public Vector3 Position;
 
     public SceneChanged() { }
 
@@ -26,9 +26,7 @@ public class SceneChanged : OwnedMessage
         base.Serialize(writer);
         writer.Put(SceneId);
         writer.Put(ClientPlayerNetId);
-        writer.Put(PositionX);
-        writer.Put(PositionY);
-        writer.Put(PositionZ);
+        writer.PutVector3(Position);
     }
 
     public override void Deserialize(NetDataReader reader)
@@ -36,8 +34,6 @@ public class SceneChanged : OwnedMessage
         base.Deserialize(reader);
         SceneId = reader.GetString();
         ClientPlayerNetId = reader.GetInt();
-        PositionX = reader.GetFloat();
-        PositionY = reader.GetFloat();
-        PositionZ = reader.GetFloat();
+        Position = reader.GetVector3();
     }
 }

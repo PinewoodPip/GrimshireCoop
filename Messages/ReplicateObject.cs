@@ -1,4 +1,5 @@
 
+using GrimshireCoop.Network;
 using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
 using UnityEngine;
@@ -12,9 +13,7 @@ public class ReplicateObject : NetObjectMessage
     public override Direction SyncDirection => Direction.ClientToServer;
 
     public string GameObjectId;
-    public float PositionX;
-    public float PositionY;
-    public float PositionZ;
+    public Vector3 Position;
     public string SceneId; // Scene of the object being replicated
     public PeerId TargetPeerId;
 
@@ -26,9 +25,7 @@ public class ReplicateObject : NetObjectMessage
     {
         base.Serialize(writer);
         writer.Put(GameObjectId);
-        writer.Put(PositionX);
-        writer.Put(PositionY);
-        writer.Put(PositionZ);
+        writer.PutVector3(Position);
         writer.Put(SceneId);
         writer.Put(TargetPeerId);
     }
@@ -37,9 +34,7 @@ public class ReplicateObject : NetObjectMessage
     {
         base.Deserialize(reader);
         GameObjectId = reader.GetString();
-        PositionX = reader.GetFloat();
-        PositionY = reader.GetFloat();
-        PositionZ = reader.GetFloat();
+        Position = reader.GetVector3();
         SceneId = reader.GetString();
         TargetPeerId = reader.GetInt();
     }

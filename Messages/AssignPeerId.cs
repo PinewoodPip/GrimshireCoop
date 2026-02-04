@@ -25,23 +25,12 @@ public class AssignPeerId : Message
     {
         base.Serialize(writer);
         writer.Put(PeerId);
-        writer.Put(PeerScenes.Count);
-        foreach (var kvp in PeerScenes)
-        {
-            writer.Put(kvp.Key);
-            writer.Put(kvp.Value);
-        }
+        writer.PutDict(PeerScenes);
     }
 
     public override void Deserialize(NetDataReader reader)
     {
         PeerId = reader.GetInt();
-        int count = reader.GetInt();
-        for (int i = 0; i < count; i++)
-        {
-            int key = reader.GetInt();
-            string value = reader.GetString();
-            PeerScenes[key] = value;
-        }
+        PeerScenes = reader.GetDict();
     }
 }

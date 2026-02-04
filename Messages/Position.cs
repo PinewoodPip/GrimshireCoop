@@ -1,6 +1,7 @@
 
 using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
+using UnityEngine;
 using static Message;
 
 namespace GrimshireCoop.Messages.Shared;
@@ -11,9 +12,7 @@ public class Position : NetObjectMessage
 
     public override Direction SyncDirection => Direction.ServerToClient;
 
-    public float PositionX;
-    public float PositionY;
-    public float PositionZ;
+    public Vector3 Pos;
 
     public Position() { }
 
@@ -22,16 +21,12 @@ public class Position : NetObjectMessage
     public override void Serialize(NetDataWriter writer)
     {
         base.Serialize(writer);
-        writer.Put(PositionX);
-        writer.Put(PositionY);
-        writer.Put(PositionZ);
+        writer.PutVector3(Pos);
     }
 
     public override void Deserialize(NetDataReader reader)
     {
         base.Deserialize(reader);
-        PositionX = reader.GetFloat();
-        PositionY = reader.GetFloat();
-        PositionZ = reader.GetFloat();
+        Pos = reader.GetVector3();
     }
 }

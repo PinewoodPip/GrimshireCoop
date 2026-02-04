@@ -61,9 +61,7 @@ public class DummyPlayer : NetworkedBehaviour
         {
             OwnerPeerId = peerId,
             NetId = netId,
-            PositionX = transform.position.x,
-            PositionY = transform.position.y,
-            PositionZ = transform.position.z
+            Pos = transform.position
         };
         SendMsg(msg);
 

@@ -75,9 +75,7 @@ public class NetworkManager : INetEventListener
                 GameObjectId = objectTypeID,
                 NetId = netObj.netId,
                 OwnerPeerId = netObj.peerId,
-                PositionX = netObj.transform.position.x,
-                PositionY = netObj.transform.position.y,
-                PositionZ = netObj.transform.position.z
+                Position = netObj.transform.position
             });
         }
 
@@ -90,9 +88,7 @@ public class NetworkManager : INetEventListener
             GameObjectId = "PeerPlayer",
             NetId = Plugin.NextFreeNetId,
             OwnerPeerId = peer.Id,
-            PositionX = playerTransform.position.x,
-            PositionY = playerTransform.position.y,
-            PositionZ = playerTransform.position.z
+            Position = playerTransform.position
         });
     }
 

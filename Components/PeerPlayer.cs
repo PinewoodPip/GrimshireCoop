@@ -132,12 +132,8 @@ public class PeerPlayer : NetworkedBehaviour
         {
             OwnerPeerId = peerId,
             NetId = netId,
-            OldPositionX = OldPosition.x,
-            OldPositionY = OldPosition.y,
-            OldPositionZ = OldPosition.z,
-            NewPositionX = transform.position.x,
-            NewPositionY = transform.position.y,
-            NewPositionZ = transform.position.z
+            OldPosition = OldPosition,
+            NewPosition = transform.position
         };
         SendMsg(msg);
 

@@ -202,25 +202,23 @@ public class Plugin : BaseUnityPlugin
                         GameObjectId = replicateObjectMsg.GameObjectId,
                         NetId = replicateObjectMsg.NetId,
                         OwnerPeerId = replicateObjectMsg.OwnerPeerId,
-                        PositionX = replicateObjectMsg.PositionX,
-                        PositionY = replicateObjectMsg.PositionY,
-                        PositionZ = replicateObjectMsg.PositionZ
+                        Position = replicateObjectMsg.Position
                     });
                     break;
                 case Messages.Server.CreateGameObject createGameObjectMsg:
                     CreateNetworkedObject(createGameObjectMsg);
                     break;
                 case Messages.Shared.Position positionMsg:
-                    netObj.transform.position = new Vector3(positionMsg.PositionX, positionMsg.PositionY, positionMsg.PositionZ);
+                    netObj.transform.position = positionMsg.Pos;
                     break;
                 case Messages.Shared.Movement movementMsg:
                     // Animate - should be done before setting pos so the facing dir vector is correct
                     if (netObj is PeerPlayer peerPlayer)
                     {
-                        peerPlayer.AnimateWalkTowards(new Vector2(movementMsg.NewPositionX, movementMsg.NewPositionY));
+                        peerPlayer.AnimateWalkTowards(new Vector2(movementMsg.NewPosition.x, movementMsg.NewPosition.y));
                     }
 
-                    netObj.transform.position = new Vector3(movementMsg.NewPositionX, movementMsg.NewPositionY, movementMsg.NewPositionZ);
+                    netObj.transform.position = movementMsg.NewPosition;
                     break;
                 case Messages.Shared.StoppedMoving stoppedMovingMsg:
                     if (netObj is PeerPlayer stoppedPeerPlayer)
@@ -262,9 +260,7 @@ public class Plugin : BaseUnityPlugin
                             GameObjectId = "PeerPlayer",
                             NetId = sceneChangedMsg.ClientPlayerNetId,
                             OwnerPeerId = sceneChangedMsg.OwnerPeerId,
-                            PositionX = sceneChangedMsg.PositionX,
-                            PositionY = sceneChangedMsg.PositionY,
-                            PositionZ = sceneChangedMsg.PositionZ
+                            Position = sceneChangedMsg.Position
                         });
                     }
 
@@ -282,13 +278,11 @@ public class Plugin : BaseUnityPlugin
                             OwnerPeerId = ownedObj.peerId,
                             NetId = ownedObj.netId,
                             GameObjectId = objectTypeID,
-                            PositionX = ownedObj.transform.position.x,
-                            PositionY = ownedObj.transform.position.y,
-                            PositionZ = ownedObj.transform.position.z,
+                            Position = ownedObj.transform.position,
                             SceneId = CurrentSceneID,
                             TargetPeerId = peerId,
                         };
-                        LogClient($"SceneChanged client handler: Replicating object netId {ownedObj.netId} of type {objectTypeID} to peer {peerId} scene {CurrentSceneID}");
+                        LogClient($"SceneChanged: Replicating object netId {ownedObj.netId} of type {objectTypeID} to peer {peerId} scene {CurrentSceneID}");
 
                         NetDataWriter writer = new NetDataWriter();
                         replicateMsg.Serialize(writer);
@@ -323,7 +317,7 @@ public class Plugin : BaseUnityPlugin
         // Initialize ownership and position
         netObj.SetPeerID(createGameObjectMsg.OwnerPeerId);
         netObj.netId = createGameObjectMsg.NetId;
-        netObj.transform.position = new Vector3(createGameObjectMsg.PositionX, createGameObjectMsg.PositionY, createGameObjectMsg.PositionZ);
+        netObj.transform.position = createGameObjectMsg.Position;
 
         // Track net ID of the client player object
         if (netObj is ClientPlayer)

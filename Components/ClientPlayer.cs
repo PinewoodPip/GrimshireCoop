@@ -62,9 +62,7 @@ public class ClientPlayer : NetworkedBehaviour
             OwnerPeerId = peerId,
             SceneId = newScene.name,
             ClientPlayerNetId = Plugin.ClientPlayerNetId,
-            PositionX = player.transform.position.x,
-            PositionY = player.transform.position.y,
-            PositionZ = player.transform.position.z
+            Position = player.transform.position
         };
         SendMsg(msg);
         CurrentSceneName = newScene.name;
@@ -193,12 +191,8 @@ public class ClientPlayer : NetworkedBehaviour
         {
             OwnerPeerId = peerId,
             NetId = netId,
-            OldPositionX = OldPosition.x,
-            OldPositionY = OldPosition.y,
-            OldPositionZ = OldPosition.z,
-            NewPositionX = transform.position.x,
-            NewPositionY = transform.position.y,
-            NewPositionZ = transform.position.z
+            OldPosition = OldPosition,
+            NewPosition = transform.position
         };
         SendMsg(msg);
 
