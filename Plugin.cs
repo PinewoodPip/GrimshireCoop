@@ -167,6 +167,13 @@ public class Plugin : BaseUnityPlugin
                 return;
             }
 
+            // Fetch the target net object if applicable
+            NetworkedBehaviour netObj = null;
+            if (msg is NetObjectMessage netObjectMsg)
+            {
+                netObj = GetByNetID(netObjectMsg.NetId);
+            }
+
             switch (msg)
             {
                 case Messages.Server.AssignPeerId assignPeerIdMsg:
@@ -204,37 +211,32 @@ public class Plugin : BaseUnityPlugin
                     CreateNetworkedObject(createGameObjectMsg);
                     break;
                 case Messages.Shared.Position positionMsg:
-                    NetworkedBehaviour netObj = Plugin.GetByNetID(positionMsg.NetId);
                     netObj.transform.position = new Vector3(positionMsg.PositionX, positionMsg.PositionY, positionMsg.PositionZ);
                     break;
                 case Messages.Shared.Movement movementMsg:
-                    NetworkedBehaviour movingObj = Plugin.GetByNetID(movementMsg.NetId);
                     // Animate - should be done before setting pos so the facing dir vector is correct
-                    if (movingObj is PeerPlayer peerPlayer)
+                    if (netObj is PeerPlayer peerPlayer)
                     {
                         peerPlayer.AnimateWalkTowards(new Vector2(movementMsg.NewPositionX, movementMsg.NewPositionY));
                     }
 
-                    movingObj.transform.position = new Vector3(movementMsg.NewPositionX, movementMsg.NewPositionY, movementMsg.NewPositionZ);
+                    netObj.transform.position = new Vector3(movementMsg.NewPositionX, movementMsg.NewPositionY, movementMsg.NewPositionZ);
                     break;
                 case Messages.Shared.StoppedMoving stoppedMovingMsg:
-                    NetworkedBehaviour stoppedObj = GetByNetID(stoppedMovingMsg.NetId);
-                    if (stoppedObj is PeerPlayer stoppedPeerPlayer)
+                    if (netObj is PeerPlayer stoppedPeerPlayer)
                     {
                         stoppedPeerPlayer.OnStoppedMoving();
                     }
                     break;
                 case Messages.Shared.ToolUsed toolUsedMsg:
-                    NetworkedBehaviour toolUserObj = GetByNetID(toolUsedMsg.NetId);
-                    if (toolUserObj is PeerPlayer toolUserPeerPlayer)
+                    if (netObj is PeerPlayer toolUserPeerPlayer)
                     {
                         toolUserPeerPlayer.PlayToolUseAnimation(toolUsedMsg.ToolId);
                     }
                     break;
                 case Messages.Shared.FaceDirection faceDirectionMsg:
-                    NetworkedBehaviour facingObj = GetByNetID(faceDirectionMsg.NetId);
                     Debug.Log($"FaceDirection message received for netId {faceDirectionMsg.NetId} dirX {faceDirectionMsg.PosX} dirY {faceDirectionMsg.PosY}");
-                    if (facingObj is PeerPlayer facingPeerPlayer)
+                    if (netObj is PeerPlayer facingPeerPlayer)
                     {
                         facingPeerPlayer.FaceTowards(new Vector2(faceDirectionMsg.PosX, faceDirectionMsg.PosY));
                     }

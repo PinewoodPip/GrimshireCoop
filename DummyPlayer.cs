@@ -10,8 +10,9 @@ public class DummyPlayer : NetworkedBehaviour
 {
     public override string NetTypeID => "DummyPlayer";
 
-    public void Awake()
+    public new void Awake()
     {
+        base.Awake();
         Debug.Log("DummyPlayer awake");
     }
 
