@@ -5,7 +5,7 @@ namespace GrimshireCoop.Network.Messages;
 
 public abstract class NetObjectMessage : OwnedMessage
 {
-    public int NetId;
+    public NetId NetId;
 
     public override void Serialize(NetDataWriter writer)
     {

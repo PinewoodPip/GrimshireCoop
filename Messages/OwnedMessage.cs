@@ -3,7 +3,7 @@ namespace GrimshireCoop.Network.Messages;
 
 public abstract class OwnedMessage : Message
 {
-    public int OwnerPeerId;
+    public PeerId OwnerPeerId;
 
     public override void Serialize(LiteNetLib.Utils.NetDataWriter writer)
     {

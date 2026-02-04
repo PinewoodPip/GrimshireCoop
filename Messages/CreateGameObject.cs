@@ -11,8 +11,8 @@ public class CreateGameObject : Message
     public override Direction SyncDirection => Direction.ServerToClient;
 
     public string GameObjectId;
-    public int NetId;
-    public int OwnerPeerId;
+    public NetId NetId;
+    public PeerId OwnerPeerId;
     public float PositionX;
     public float PositionY;
     public float PositionZ;

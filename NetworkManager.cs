@@ -23,7 +23,7 @@ public class NetworkManager : INetEventListener
     private ManualLogSource Logger = Plugin.Logger;
 
     private Dictionary<int, Vector3> playerPositions = new Dictionary<int, Vector3>();
-    private Dictionary<int, NetPeer> peers = new Dictionary<int, NetPeer>();
+    private Dictionary<int, NetPeer> peers = new Dictionary<PeerId, NetPeer>();
 
     public NetworkManager()
     {
@@ -96,7 +96,7 @@ public class NetworkManager : INetEventListener
         });
     }
 
-    public void SendMsg(int peerId, Message msg)
+    public void SendMsg(PeerId peerId, Message msg)
     {
         if (peers.TryGetValue(peerId, out NetPeer peer))
         {

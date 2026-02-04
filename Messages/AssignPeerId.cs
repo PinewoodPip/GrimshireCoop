@@ -8,12 +8,12 @@ public class AssignPeerId : Message
     public override string MessageType => "Server.AssignPeerId";
     public override Direction SyncDirection => Direction.ServerToClient;
 
-    public int PeerId;
-    public Dictionary<int, string> PeerScenes = [];
+    public PeerId PeerId;
+    public Dictionary<PeerId, string> PeerScenes = [];
 
     public AssignPeerId() { }
 
-    public AssignPeerId(int peerId, Dictionary<int, string> peerScenes)
+    public AssignPeerId(PeerId peerId, Dictionary<PeerId, string> peerScenes)
     {
         PeerId = peerId;
         PeerScenes = peerScenes;

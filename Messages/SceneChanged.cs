@@ -12,7 +12,7 @@ public class SceneChanged : OwnedMessage
     public override Direction SyncDirection => Direction.ClientToServer;
 
     public string SceneId;
-    public int ClientPlayerNetId;
+    public NetId ClientPlayerNetId;
     public float PositionX;
     public float PositionY;
     public float PositionZ;

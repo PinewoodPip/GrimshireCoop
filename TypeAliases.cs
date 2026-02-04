@@ -1,0 +1,3 @@
+
+global using PeerId = System.Int32; // IDs for connected peers/clients. Note that the server is also a peer, always with ID 0 (from client PoV, where it's also the only peer ever)
+global using NetId = System.Int32; // IDs for networked game objects.

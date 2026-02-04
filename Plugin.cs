@@ -23,14 +23,14 @@ public class Plugin : BaseUnityPlugin
     internal static NetworkManager server;
     internal static NetManager client;
     internal static int PORT = 9050;
-    internal static int serverPeerId;
-    internal static int ClientPeerId;
-    internal static int ClientPlayerNetId;
+    internal static PeerId serverPeerId;
+    internal static PeerId ClientPeerId;
+    internal static NetId ClientPlayerNetId;
     private static int HomeSceneLoadCount = 0;
 
     public static string CurrentSceneID => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
-    public static int NextFreeNetId
+    public static NetId NextFreeNetId
     {
         get
         {
@@ -50,9 +50,9 @@ public class Plugin : BaseUnityPlugin
     }
 
     // Maps scene ID to map of netId to NetworkedBehaviour
-    public static Dictionary<string, Dictionary<int, NetworkedBehaviour>> NetworkedObjects = [];
-
-    public static Dictionary<int, string> PeerScenes = new Dictionary<int, string>();
+    public static Dictionary<string, Dictionary<NetId, NetworkedBehaviour>> NetworkedObjects = [];
+    // Maps peers to the scene they are in.
+    public static Dictionary<PeerId, string> PeerScenes = [];
 
     public static Dictionary<string, Type> MessageTypes = new Dictionary<string, Type>
     {
@@ -348,7 +348,7 @@ public class Plugin : BaseUnityPlugin
     {
         if (!NetworkedObjects.ContainsKey(scene))
         {
-            NetworkedObjects[scene] = new Dictionary<int, NetworkedBehaviour>();
+            NetworkedObjects[scene] = new Dictionary<NetId, NetworkedBehaviour>();
         }
         NetworkedObjects[scene][netObj.netId] = netObj;
     }
@@ -399,7 +399,6 @@ public class Plugin : BaseUnityPlugin
                     // Create a PeerPlayer for other peers
                     PlayerController clientPlayer = GameManager.Instance.Player;
                     GameObject peerPlayerObj = new GameObject("Coop.NetPeerPlayer");
-                    // DontDestroyOnLoad(peerPlayerObj);
 
                     GameObject playerSprite = clientPlayer.transform.Find("PlayerSprite").gameObject;
                     GameObject peerPlayerSprite = Instantiate(playerSprite, peerPlayerObj.transform);
@@ -421,7 +420,7 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    public static NetworkedBehaviour GetByNetID(int netId)
+    public static NetworkedBehaviour GetByNetID(NetId netId)
     {
         foreach (var sceneObjects in NetworkedObjects.Values)
         {
@@ -433,11 +432,11 @@ public class Plugin : BaseUnityPlugin
         return null;
     }
 
-    public static Dictionary<int, NetworkedBehaviour> GetCurrentSceneNetworkedObjects()
+    public static Dictionary<NetId, NetworkedBehaviour> GetCurrentSceneNetworkedObjects()
     {
         if (!NetworkedObjects.ContainsKey(CurrentSceneID))
         {
-            NetworkedObjects[CurrentSceneID] = new Dictionary<int, NetworkedBehaviour>();
+            NetworkedObjects[CurrentSceneID] = new Dictionary<NetId, NetworkedBehaviour>();
         }
         return NetworkedObjects[CurrentSceneID];
     }
@@ -465,7 +464,7 @@ public class Plugin : BaseUnityPlugin
         // Update networked objects of the current scene
         // Only the owners of objects are expected to mark them as dirty,
         // thus this syncs the client's objects to server
-        Dictionary<int, NetworkedBehaviour> currentSceneObjects = GetCurrentSceneNetworkedObjects();
+        Dictionary<NetId, NetworkedBehaviour> currentSceneObjects = GetCurrentSceneNetworkedObjects();
         foreach (var netObj in currentSceneObjects.Values)
         {
             if (netObj.isDirty)

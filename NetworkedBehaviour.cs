@@ -11,8 +11,8 @@ public abstract class NetworkedBehaviour : MonoBehaviour
     public abstract string NetTypeID { get; }
 
     protected NetManager client => Plugin.client;
-    public int peerId;
-    public int netId;
+    public PeerId peerId;
+    public NetId netId;
     public bool isLocalPlayer { get => peerId == Plugin.ClientPeerId; }
     public bool isDirty { get; protected set; } = false;
 
@@ -23,7 +23,7 @@ public abstract class NetworkedBehaviour : MonoBehaviour
 
     }
 
-    public void SetPeerID(int id)
+    public void SetPeerID(PeerId id)
     {
         peerId = id;
     }

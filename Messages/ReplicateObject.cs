@@ -16,7 +16,7 @@ public class ReplicateObject : NetObjectMessage
     public float PositionY;
     public float PositionZ;
     public string SceneId; // Scene of the object being replicated
-    public int TargetPeerId;
+    public PeerId TargetPeerId;
 
     public ReplicateObject() { }
 
