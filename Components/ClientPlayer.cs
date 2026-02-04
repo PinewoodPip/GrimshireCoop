@@ -4,6 +4,7 @@ using HarmonyLib;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop;
@@ -20,8 +21,12 @@ public class ClientPlayer : NetworkedBehaviour
 
     static bool MethodsWerePatched = false;
 
-    public void Awake()
+    static string CurrentSceneName = ""; // Necessary as the player is technically on the DontDestroyOnLoad scene
+
+
+    public new void Awake()
     {
+        base.Awake();
         Debug.Log("ClientPlayer awake");
         player = GameManager.Instance.Player;
 
@@ -30,6 +35,39 @@ public class ClientPlayer : NetworkedBehaviour
             Harmony.CreateAndPatchAll(typeof(ClientPlayer));
             MethodsWerePatched = true;
         }
+
+        CurrentSceneName = SceneManager.GetActiveScene().name;
+        SceneManager.activeSceneChanged += OnSceneChanged2;
+    }
+
+    public new void Update()
+    {
+        base.Update();
+        if (!isLocalPlayer)
+        {
+            Debug.LogWarning("ClientPlayer exists on non-local player??? This should never happen.");
+            return;
+        }
+    }
+
+    private void OnSceneChanged2(Scene oldScene, Scene newScene)
+    {
+        string oldSceneName = CurrentSceneName;
+        Debug.Log($"ClientPlayer detected scene change from {oldSceneName} to {newScene.name}");
+        // oldScene.name is null? WTF? TODO
+        // Send scene change message
+        Plugin.ChangeNetObjectScene(this, oldSceneName, newScene.name);
+        SceneChanged msg = new()
+        {
+            OwnerPeerId = peerId,
+            SceneId = newScene.name,
+            ClientPlayerNetId = Plugin.ClientPlayerNetId,
+            PositionX = player.transform.position.x,
+            PositionY = player.transform.position.y,
+            PositionZ = player.transform.position.z
+        };
+        SendMsg(msg);
+        CurrentSceneName = newScene.name;
     }
 
     // Sync movement

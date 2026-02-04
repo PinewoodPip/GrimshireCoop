@@ -14,8 +14,9 @@ public class PeerPlayer : NetworkedBehaviour
 
     private Vector3 OldPosition;
 
-    public void Awake()
+    public new void Awake()
     {
+        base.Awake();
         Debug.Log("PeerPlayer awake");
         animator = transform.Find("PlayerSprite").GetComponent<Animator>();
     }
@@ -141,10 +142,5 @@ public class PeerPlayer : NetworkedBehaviour
         SendMsg(msg);
 
         base.Sync();
-    }
-
-    public void OnDestroy()
-    {
-        Debug.Log("PeerPlayer destroyed");
     }
 }

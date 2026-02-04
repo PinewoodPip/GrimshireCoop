@@ -10,6 +10,7 @@ using GrimshireCoop.Network.Messages;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace GrimshireCoop;
 
@@ -45,24 +46,27 @@ public class NetworkManager : INetEventListener
     public void Stop()
     {
         netManager.Stop();
-        Logger.LogInfo("NetworkManager stopped.");
+        LogServer("NetworkManager stopped.");
     }
 
     // INetEventListener implementations
     public void OnPeerConnected(NetPeer peer)
     {
-        Logger.LogInfo($"Peer connected: {peer.Id}");
+        LogServer($"Peer connected: {peer.Id}");
         peers[peer.Id] = peer;
+
+        Plugin.PeerScenes[peer.Id] = SceneManager.GetActiveScene().name; // TODO! peer might've joined from another scene
 
         // Assign Peer ID
         SendMsg(peer.Id, new AssignPeerId
         {
-            PeerId = peer.Id
+            PeerId = peer.Id,
+            PeerScenes = new Dictionary<int, string>(Plugin.PeerScenes)
         });
 
         // Replicate existing objects for the new peer
         // TODO replication utilities to sync state of those objects
-        foreach (var netObj in Plugin.NetworkedObjects.Values)
+        foreach (var netObj in Plugin.GetCurrentSceneNetworkedObjects().Values)
         {
             // Send create game object message
             string objectTypeID = netObj.NetTypeID == "ClientPlayer" ? "PeerPlayer" : netObj.NetTypeID;
@@ -84,7 +88,7 @@ public class NetworkManager : INetEventListener
         SendMsgToAll(new CreateGameObject
         {
             GameObjectId = "PeerPlayer",
-            NetId = Plugin.NetworkedObjects.Count + 1,
+            NetId = Plugin.NextFreeNetId,
             OwnerPeerId = peer.Id,
             PositionX = playerTransform.position.x,
             PositionY = playerTransform.position.y,
@@ -99,11 +103,11 @@ public class NetworkManager : INetEventListener
             writer.Reset();
             msg.Serialize(writer);
             peer.Send(writer, DeliveryMethod.ReliableOrdered);
-            Logger.LogInfo($"Sent message {msg.MessageType} to peer {peerId}");
+            LogServer($"Sent message {msg.MessageType} to peer {peerId}");
         }
         else
         {
-            Logger.LogWarning($"Peer {peerId} not found.");
+            LogWarning($"Peer {peerId} not found.");
         }
     }
 
@@ -112,7 +116,7 @@ public class NetworkManager : INetEventListener
         writer.Reset();
         msg.Serialize(writer);
         netManager.SendToAll(writer, DeliveryMethod.ReliableOrdered);
-        Logger.LogInfo($"Sent message {msg.MessageType} to all peers");
+        LogServer($"Sent message {msg.MessageType} to all peers");
     }
 
     public void ForwardMsg(OwnedMessage msg)
@@ -124,14 +128,14 @@ public class NetworkManager : INetEventListener
             {
                 msg.Serialize(writer);
                 peer.Send(writer, DeliveryMethod.ReliableOrdered);
-                Logger.LogInfo($"Forwarded message {msg.MessageType} to peer {peer.Id}");
+                LogServer($"Forwarded message {msg.MessageType} to peer {peer.Id}");
             }
         }
     }
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
-        Logger.LogInfo($"Peer disconnected: {peer.Id}, reason: {disconnectInfo.Reason}");
+        LogServer($"Peer disconnected: {peer.Id}, reason: {disconnectInfo.Reason}");
         playerPositions.Remove(peer.Id);
         peers.Remove(peer.Id);
     }
@@ -143,7 +147,7 @@ public class NetworkManager : INetEventListener
 
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
     {
-        Logger.LogInfo($"Server received data from client {peer.Id} bytes {reader.AvailableBytes}");
+        LogServer($"Server received data from client {peer.Id} bytes {reader.AvailableBytes}");
 
         var msgType = reader.GetString(100);
         Type msgClass = Plugin.MessageTypes[msgType];
@@ -151,7 +155,7 @@ public class NetworkManager : INetEventListener
         Message msg = Activator.CreateInstance(msgClass, reader) as Message;
         
         // Handle the message (mostly forwarding)
-        Logger.LogInfo($"Deserialized message of type: {msg.MessageType}");
+        LogServer($"Deserialized message of type: {msg.MessageType}");
         switch (msg)
         {
             case Messages.Shared.Position positionMsg:
@@ -169,17 +173,35 @@ public class NetworkManager : INetEventListener
             case Messages.Shared.FaceDirection faceDirectionMsg:
                 ForwardMsg(faceDirectionMsg);
                 break;
+            case Messages.Shared.SceneChanged sceneChangedMsg:
+                LogServer($"Peer {peer.Id} changed scene to {sceneChangedMsg.SceneId}");
+                ForwardMsg(sceneChangedMsg);
+                break;
+            case Messages.Shared.ReplicateObject replicateObjectMsg:
+                LogServer($"Peer {peer.Id} replicated object {replicateObjectMsg.NetId} in scene {replicateObjectMsg.SceneId} to peer {replicateObjectMsg.TargetPeerId}");
+                ForwardMsg(replicateObjectMsg);
+                break;
             default:
-                Logger.LogWarning($"Unknown message type received: {msgType}");
+                LogWarning($"Unknown message type received: {msgType}");
                 break;
         }
 
         reader.Recycle();
     }
 
+    public void LogServer(string message)
+    {
+        Logger.LogInfo($"[Server] {message}");
+    }
+
+    public void LogWarning(string message)
+    {
+        Logger.LogWarning($"[Server] {message}");
+    }
+
     public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
     {
-        Logger.LogInfo($"Received unconnected message from {remoteEndPoint}");
+        LogServer($"Received unconnected message from {remoteEndPoint}");
     }
 
     public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
@@ -191,7 +213,7 @@ public class NetworkManager : INetEventListener
         if (netManager.ConnectedPeersCount < 2) // TODO
         {
             request.AcceptIfKey(ConnectionKey);
-            Logger.LogInfo($"Connection request accepted from {request.RemoteEndPoint}");
+            LogServer($"Connection request accepted from {request.RemoteEndPoint}");
         }
         else
         {

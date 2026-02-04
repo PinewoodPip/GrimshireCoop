@@ -2,6 +2,7 @@
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace GrimshireCoop;
 
@@ -14,6 +15,13 @@ public abstract class NetworkedBehaviour : MonoBehaviour
     public int netId;
     public bool isLocalPlayer { get => peerId == Plugin.ClientPeerId; }
     public bool isDirty { get; protected set; } = false;
+
+    private bool Unregistered = false;
+
+    public void Awake()
+    {
+
+    }
 
     public void SetPeerID(int id)
     {
@@ -41,5 +49,15 @@ public abstract class NetworkedBehaviour : MonoBehaviour
     public virtual void Sync()
     {
         isDirty = false;
+    }
+
+    private void OnDestroy()
+    {
+        if (!Unregistered)
+        {
+            Debug.Log($"NetworkedBehaviour OnDestroy called for netId {netId}, unregistering from scene {SceneManager.GetActiveScene().name} {gameObject.name}");
+            Plugin.UnregisterNetObject(this, SceneManager.GetActiveScene().name);
+            Unregistered = true;
+        }
     }
 }
