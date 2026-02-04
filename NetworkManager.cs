@@ -169,6 +169,9 @@ public class NetworkManager : INetEventListener
             case Messages.Shared.FaceDirection faceDirectionMsg:
                 ForwardMsg(faceDirectionMsg);
                 break;
+            case Messages.Shared.SetHeldItem setHeldItemMsg:
+                ForwardMsg(setHeldItemMsg);
+                break;
             case Messages.Shared.SceneChanged sceneChangedMsg:
                 LogServer($"Peer {peer.Id} changed scene to {sceneChangedMsg.SceneId}");
                 ForwardMsg(sceneChangedMsg);

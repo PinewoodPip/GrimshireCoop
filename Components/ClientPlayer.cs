@@ -174,9 +174,28 @@ public class ClientPlayer : NetworkedBehaviour
         }
     }
 
+    // Sync held item.
+    [HarmonyPatch(typeof(PlayerController), "SetHeldItem")]
+    [HarmonyPostfix]
+    static void AfterSetHeldItem(PlayerController __instance, bool holdingItem)
+    {
+        ClientPlayer clientPlayer = __instance.GetComponent<ClientPlayer>();
+        if (clientPlayer)
+        {
+            int itemId = holdingItem ? __instance.GetHeldItemRef().ID : -1;
+            SetHeldItem msg = new()
+            {
+                OwnerPeerId = clientPlayer.peerId,
+                NetId = clientPlayer.netId,
+                ItemId = itemId
+            };
+            clientPlayer.SendMsg(msg);
+        }
+    }
+
     public override void NetworkUpdate()
     {
-        
+
     }
 
     // Send position to all connected peers

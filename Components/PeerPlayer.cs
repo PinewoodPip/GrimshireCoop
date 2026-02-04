@@ -11,6 +11,7 @@ public class PeerPlayer : NetworkedBehaviour
     public override string NetTypeID => "PeerPlayer";
 
     public Animator animator;
+    public SpriteRenderer heldItemSprite;
 
     private Vector3 OldPosition;
 
@@ -18,7 +19,9 @@ public class PeerPlayer : NetworkedBehaviour
     {
         base.Awake();
         Debug.Log("PeerPlayer awake");
-        animator = transform.Find("PlayerSprite").GetComponent<Animator>();
+        GameObject playerSpriteObj = transform.Find("PlayerSprite").gameObject;
+        animator = playerSpriteObj.GetComponent<Animator>();
+        heldItemSprite = playerSpriteObj.transform.Find("HeldItemSprite").GetComponent<SpriteRenderer>();
     }
 
     public void Start()
@@ -31,13 +34,13 @@ public class PeerPlayer : NetworkedBehaviour
     // TODO replace with UpdateAnim()
     public void FaceTowards(Vector2 dir)
     {
-		Vector2 diff = dir - (Vector2)base.transform.position;
-		animator.SetFloat("horizontal", 0f);
-		animator.SetFloat("vertical", 0f);
-		if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
-		{
-			animator.SetFloat("horizontal", (diff.x > 0f) ? 1 : (-1));
-		}
+        Vector2 diff = dir - (Vector2)base.transform.position;
+        animator.SetFloat("horizontal", 0f);
+        animator.SetFloat("vertical", 0f);
+        if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
+        {
+            animator.SetFloat("horizontal", (diff.x > 0f) ? 1 : (-1));
+        }
         else
         {
             animator.SetFloat("vertical", (diff.y > 0f) ? 1 : (-1));
@@ -80,6 +83,18 @@ public class PeerPlayer : NetworkedBehaviour
             default:
                 Debug.LogWarning($"PlayToolUseAnimation: unknown tool {toolId}");
                 break;
+        }
+    }
+
+    public void SetHeldItem(int itemId)
+    {
+        InventoryItem item = itemId >= 0 ? ResourceManager.Instance.GetInventoryItemByID(itemId) : null;
+        bool holdingItem = item != null;
+        animator.SetBool("isHolding", holdingItem);
+        this.heldItemSprite.enabled = holdingItem;
+        if (holdingItem)
+        {
+            this.heldItemSprite.sprite = item.InventoryDisplayIcon;
         }
     }
 

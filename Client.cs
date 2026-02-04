@@ -146,6 +146,10 @@ public class Client
                         facingPeerPlayer.FaceTowards(new Vector2(faceDirectionMsg.PosX, faceDirectionMsg.PosY));
                     }
                     break;
+                case Messages.Shared.SetHeldItem setHeldItemMsg:
+                    PeerPlayer heldItemPeerPlayer = netObj as PeerPlayer;
+                    heldItemPeerPlayer.SetHeldItem(setHeldItemMsg.ItemId);
+                    break;
                 case Messages.Shared.SceneChanged sceneChangedMsg:
                 {
                     // Delete previous PeerPlayer

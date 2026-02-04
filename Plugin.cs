@@ -52,6 +52,7 @@ public class Plugin : BaseUnityPlugin
         { "Shared.StoppedMoving", typeof(Messages.Shared.StoppedMoving) },
         { "Shared.ToolUsed", typeof(Messages.Shared.ToolUsed) },
         { "Shared.FaceDirection", typeof(Messages.Shared.FaceDirection) },
+        { "Shared.SetHeldItem", typeof(Messages.Shared.SetHeldItem) },
         { "Shared.SceneChanged", typeof(Messages.Shared.SceneChanged) },
         { "Shared.ReplicateObject", typeof(Messages.Shared.ReplicateObject) },
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
@@ -67,6 +68,7 @@ public class Plugin : BaseUnityPlugin
         "Shared.StoppedMoving",
         "Shared.ToolUsed",
         "Shared.FaceDirection",
+        "Shared.SetHeldItem",
     };
 
     private void Awake()
