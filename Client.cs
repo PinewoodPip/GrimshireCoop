@@ -208,7 +208,7 @@ public class Client
     
     private NetworkedBehaviour CreateGameObjectByType(string gameObjectId, int ownerPeerId)
     {
-        Logger.LogInfo($"Creating networked GameObject {gameObjectId}");
+        Log($"Creating networked GameObject {gameObjectId}");
         switch (gameObjectId)
         {
             case "DummyPlayer":
@@ -280,12 +280,12 @@ public class Client
     
     public static void Log(string message)
     {
-        Logger.LogInfo($"[Client] {message}");
+        Logger.LogInfo($"[Client {Instance.ClientPeerId}] {message}");
     }
 
     public static void LogWarning(string message)
     {
-        Logger.LogWarning($"[Client] {message}");
+        Logger.LogWarning($"[Client {Instance.ClientPeerId}] {message}");
     }
 
     public void Dispose()

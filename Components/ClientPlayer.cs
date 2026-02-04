@@ -37,7 +37,7 @@ public class ClientPlayer : NetworkedBehaviour
         }
 
         CurrentSceneName = SceneManager.GetActiveScene().name;
-        SceneManager.activeSceneChanged += OnSceneChanged2;
+        SceneManager.activeSceneChanged += OnSceneChanged;
     }
 
     public new void Update()
@@ -50,7 +50,7 @@ public class ClientPlayer : NetworkedBehaviour
         }
     }
 
-    private void OnSceneChanged2(Scene oldScene, Scene newScene)
+    private void OnSceneChanged(Scene oldScene, Scene newScene)
     {
         string oldSceneName = CurrentSceneName;
         Debug.Log($"ClientPlayer detected scene change from {oldSceneName} to {newScene.name}");
@@ -186,7 +186,6 @@ public class ClientPlayer : NetworkedBehaviour
         // ATM the type of the game object is desynched between
         // peers, ie. for the local player it's a ClientPlayer
         // but for other peers it's a PeerPlayer.
-        Debug.Log($"ClientPlayer.Sync called for netId {netId} at position {transform.position}");
         Movement msg = new()
         {
             OwnerPeerId = peerId,
