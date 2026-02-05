@@ -58,6 +58,16 @@ public abstract class NetworkedBehaviour : MonoBehaviour
         IsDirty = false;
     }
 
+    public virtual byte[] GetReplicationData()
+    {
+        return [];
+    }
+
+    public virtual void ApplyReplicationData(byte[] data)
+    {
+        
+    }
+
     private void OnDestroy()
     {
         if (!Unregistered)

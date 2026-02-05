@@ -5,7 +5,7 @@ using static Message;
 
 namespace GrimshireCoop.Messages.Shared;
 
-public class RequestCreateTree : NetObjectMessage // TODO these need to be replicated from host => client when client enters hosts's scene
+public class RequestCreateTree : NetObjectMessage
 {
     public override string MessageType => "Shared.RequestCreateTree";
 
@@ -29,7 +29,7 @@ public class RequestCreateTree : NetObjectMessage // TODO these need to be repli
         TreeData = DeserializeTreeData(reader);
     }
 
-    private static void SerializeTreeData(NetDataWriter writer, PersistentTreeData data)
+    public static void SerializeTreeData(NetDataWriter writer, PersistentTreeData data)
     {
         writer.Put(data.objID);
         writer.Put(data.treeDataRefID);
@@ -66,7 +66,7 @@ public class RequestCreateTree : NetObjectMessage // TODO these need to be repli
         }
     }
 
-    private static PersistentTreeData DeserializeTreeData(NetDataReader reader)
+    public static PersistentTreeData DeserializeTreeData(NetDataReader reader)
     {
         PersistentTreeData data = new();
         data.objID = reader.GetInt();

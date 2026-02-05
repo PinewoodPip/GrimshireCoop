@@ -16,6 +16,7 @@ public class ReplicateObject : NetObjectMessage
     public Vector3 Position;
     public string SceneId; // Scene of the object being replicated
     public PeerId TargetPeerId;
+    public byte[] ReplicationData;
 
     public ReplicateObject() { }
 
@@ -28,6 +29,8 @@ public class ReplicateObject : NetObjectMessage
         writer.PutVector3(Position);
         writer.Put(SceneId);
         writer.Put(TargetPeerId);
+        writer.Put(ReplicationData.Length);
+        writer.Put(ReplicationData);
     }
 
     public override void Deserialize(NetDataReader reader)
@@ -37,5 +40,8 @@ public class ReplicateObject : NetObjectMessage
         Position = reader.GetVector3();
         SceneId = reader.GetString();
         TargetPeerId = reader.GetInt();
+        int replicationDataLength = reader.GetInt();
+        ReplicationData = new byte[replicationDataLength];
+        reader.GetBytes(ReplicationData, replicationDataLength);
     }
 }

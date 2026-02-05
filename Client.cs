@@ -96,8 +96,6 @@ public class Client
                 case Messages.Server.CreatePlayer createPlayerMsg:
                     break;
                 case Messages.Shared.ReplicateObject replicateObjectMsg:
-                    Log($"Client received ReplicateObject message for netId {replicateObjectMsg.NetId} of type {replicateObjectMsg.GameObjectId} from peer {replicateObjectMsg.OwnerPeerId}");
-
                     // Only replicate if the message is for this client
                     if (replicateObjectMsg.TargetPeerId != ClientPeerId)
                     {
@@ -105,13 +103,14 @@ public class Client
                         break;
                     }
                     Log($"[Client] Replicating object netId {replicateObjectMsg.NetId} of type {replicateObjectMsg.GameObjectId} from peer {replicateObjectMsg.OwnerPeerId}");
-                    CreateNetworkedObject(new CreateGameObject
+                    NetworkedBehaviour replicatedObj = CreateNetworkedObject(new CreateGameObject
                     {
                         GameObjectId = replicateObjectMsg.GameObjectId,
                         NetId = replicateObjectMsg.NetId,
                         OwnerPeerId = replicateObjectMsg.OwnerPeerId,
                         Position = replicateObjectMsg.Position
                     });
+                    replicatedObj.ApplyReplicationData(replicateObjectMsg.ReplicationData);
                     break;
                 case Messages.Server.CreateGameObject createGameObjectMsg:
                     CreateNetworkedObject(createGameObjectMsg);
@@ -208,6 +207,7 @@ public class Client
                                 Position = ownedObj.transform.position,
                                 SceneId = CurrentSceneID,
                                 TargetPeerId = peerId,
+                                ReplicationData = ownedObj.GetReplicationData()
                             };
                             Log($"SceneChanged: Replicating object netId {ownedObj.netId} of type {objectTypeID} to peer {peerId} scene {CurrentSceneID}");
 
