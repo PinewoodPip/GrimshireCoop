@@ -47,7 +47,6 @@ public class Plugin : BaseUnityPlugin
         { "Shared.ToolUsed", typeof(Messages.Shared.ToolUsed) },
         { "Shared.FaceDirection", typeof(Messages.Shared.FaceDirection) },
         { "Shared.SetHeldItem", typeof(Messages.Shared.SetHeldItem) },
-        { "Shared.RequestCreateTree", typeof(Messages.Shared.RequestCreateTree) },
         { "Shared.ObjectAction", typeof(Messages.Shared.ObjectAction) },
         { "Shared.SceneChanged", typeof(Messages.Shared.SceneChanged) },
         { "Shared.ReplicateObject", typeof(Messages.Shared.ReplicateObject) },
@@ -65,7 +64,7 @@ public class Plugin : BaseUnityPlugin
         "Shared.ToolUsed",
         "Shared.FaceDirection",
         "Shared.SetHeldItem",
-        "Shared.RequestCreateTree",
+        "Shared.ReplicateObject",
         "Shared.ObjectAction",
     };
 

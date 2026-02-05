@@ -172,9 +172,6 @@ public class NetworkManager : INetEventListener
             case Messages.Shared.SetHeldItem setHeldItemMsg:
                 ForwardMsg(setHeldItemMsg);
                 break;
-            case Messages.Shared.RequestCreateTree requestCreateTreeMsg:
-                ForwardMsg(requestCreateTreeMsg);
-                break;
             case Messages.Shared.ObjectAction objectActionMsg:
                 ForwardMsg(objectActionMsg);
                 break;

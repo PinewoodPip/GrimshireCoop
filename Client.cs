@@ -18,12 +18,12 @@ public class Client
     public static string CurrentSceneID => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
     public static NetId ClientPlayerNetId;
 
+    public static Client Instance { get; private set; }
     public PeerId ClientPeerId { get; private set; }
     public static Dictionary<PeerId, string> PeerScenes => Plugin.PeerScenes;
     public NetPeer ServerPeer => netManager?.FirstPeer;
 
     private static readonly ManualLogSource Logger = Plugin.Logger;
-    private static Client Instance = null;
 
     private NetManager netManager;
 
@@ -97,7 +97,8 @@ public class Client
                     break;
                 case Messages.Shared.ReplicateObject replicateObjectMsg:
                     // Only replicate if the message is for this client
-                    if (replicateObjectMsg.TargetPeerId != ClientPeerId)
+                    int targetPeerId = replicateObjectMsg.TargetPeerId;
+                    if (targetPeerId != -1 && targetPeerId != ClientPeerId)
                     {
                         Log($"Ignoring ReplicateObject message for peer {replicateObjectMsg.TargetPeerId} (current peer {ClientPeerId})");
                         break;
@@ -149,16 +150,6 @@ public class Client
                 case Messages.Shared.SetHeldItem setHeldItemMsg:
                     PeerPlayer heldItemPeerPlayer = netObj as PeerPlayer;
                     heldItemPeerPlayer.SetHeldItem(setHeldItemMsg.ItemId);
-                    break;
-                case Messages.Shared.RequestCreateTree requestCreateTreeMsg:
-                    Components.TreeObject netTree = CreateNetworkedObject(new CreateGameObject
-                    {
-                        GameObjectId = "TreeObject",
-                        NetId = requestCreateTreeMsg.NetId,
-                        OwnerPeerId = requestCreateTreeMsg.OwnerPeerId,
-                        Position = new Vector3(requestCreateTreeMsg.TreeData.posX, requestCreateTreeMsg.TreeData.posY, 0)
-                    }) as Components.TreeObject;
-                    netTree.Tree.PTreeDataContainer = requestCreateTreeMsg.TreeData;
                     break;
                 case Messages.Shared.ObjectAction objectActionMsg:
                     netObj.OnAction(objectActionMsg);
@@ -300,6 +291,41 @@ public class Client
         Plugin.RegisterNetObject(netObj, CurrentSceneID);
 
         return netObj;    
+    }
+
+    public static T CreateNetObject<T>(GameObject originalObj) where T : NetworkedBehaviour
+    {
+        T netObj = WrapNetObject(originalObj.AddComponent<T>(), Client.Instance.ClientPeerId, Plugin.NextFreeNetId) as T; // TODO have this consume the next free netId from the plugin
+        ReplicateObject msg = new()
+        {
+            OwnerPeerId = netObj.peerId,
+            NetId = netObj.netId,
+            GameObjectId = netObj.NetTypeID,
+            Position = originalObj.transform.position,
+            SceneId = Client.CurrentSceneID,
+            TargetPeerId = -1,
+            ReplicationData = netObj.GetReplicationData(),
+        };
+        SendMsg(msg);
+        return netObj;
+    }
+
+    private static NetworkedBehaviour WrapNetObject(NetworkedBehaviour netObj, PeerId ownerPeerId, NetId netId)
+    {
+        netObj.SetPeerID(ownerPeerId);
+        netObj.netId = netId;
+
+        // Track it
+        Plugin.RegisterNetObject(netObj, CurrentSceneID);
+
+        return netObj;
+    }
+
+    public static void SendMsg(Message msg)
+    {
+        NetDataWriter writer = new NetDataWriter();
+        msg.Serialize(writer);
+        Plugin.client.ServerPeer.Send(writer, DeliveryMethod.ReliableOrdered);
     }
 
     public NetworkedBehaviour GetByNetID(NetId netId)
