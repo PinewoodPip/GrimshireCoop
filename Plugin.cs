@@ -19,21 +19,13 @@ public class Plugin : BaseUnityPlugin
     internal static PeerId serverPeerId;
     private static int HomeSceneLoadCount = 0;
 
-    public static NetId NextFreeNetId
+    private static int usedNetIds = 0;
+    public static NetId NextFreeNetId // TODO this should be kept in sync for everyone
     {
         get
         {
-            int maxNetId = 0;
-            foreach (var sceneObjects in NetworkedObjects.Values)
-            {
-                foreach (var netObj in sceneObjects.Values)
-                {
-                    if (netObj.netId > maxNetId)
-                    {
-                        maxNetId = netObj.netId;
-                    }
-                }
-            }
+            int maxNetId = usedNetIds;
+            usedNetIds++;
             return maxNetId + 1;
         }
     }
