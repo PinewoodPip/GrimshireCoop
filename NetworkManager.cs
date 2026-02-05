@@ -175,7 +175,10 @@ public class NetworkManager : INetEventListener
             case Messages.Shared.SetRandomSeed setRandomSeedMsg:
                 ForwardMsg(setRandomSeedMsg);
                 break;
-            case Messages.Shared.ObjectAction objectActionMsg:
+            case Messages.Shared.TileMapAction tileMapActionMsg:
+                ForwardMsg(tileMapActionMsg);
+                break;
+            case Messages.Shared.ObjectAction objectActionMsg: // Will handle derived msgs as well.
                 ForwardMsg(objectActionMsg);
                 break;
             case Messages.Shared.SceneChanged sceneChangedMsg:

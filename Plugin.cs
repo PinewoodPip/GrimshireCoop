@@ -52,6 +52,7 @@ public class Plugin : BaseUnityPlugin
         { "Shared.SceneChanged", typeof(Messages.Shared.SceneChanged) },
         { "Shared.ReplicateObject", typeof(Messages.Shared.ReplicateObject) },
         { "Shared.SetRandomSeed", typeof(Messages.Shared.SetRandomSeed) },
+        { "Shared.TileMapAction", typeof(Messages.Shared.TileMapAction) },
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
     };
 
@@ -68,6 +69,7 @@ public class Plugin : BaseUnityPlugin
         "Shared.SetHeldItem",
         "Shared.ReplicateObject",
         "Shared.ObjectAction",
+        "Shared.TileMapAction",
     };
 
     private void Awake()
@@ -79,6 +81,7 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(Plugin));
         Harmony.CreateAndPatchAll(typeof(TreeManager));
         Harmony.CreateAndPatchAll(typeof(NetCropManager));
+        Harmony.CreateAndPatchAll(typeof(NetTileMapManager));
 
         SceneManager.sceneLoaded += (scene, mode) =>
         {

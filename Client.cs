@@ -151,11 +151,14 @@ public class Client
                     PeerPlayer heldItemPeerPlayer = netObj as PeerPlayer;
                     heldItemPeerPlayer.SetHeldItem(setHeldItemMsg.ItemId);
                     break;
-                case Messages.Shared.ObjectAction objectActionMsg:
+                case Messages.Shared.ObjectAction objectActionMsg: // Will handle derived msgs as well.
                     netObj.OnAction(objectActionMsg);
                     break;
                 case Messages.Shared.SetRandomSeed setRandomSeedMsg:
                     UnityEngine.Random.state = setRandomSeedMsg.RandomState;
+                    break;
+                case Messages.Shared.TileMapAction tileMapActionMsg:
+                    NetTileMapManager.HandleTileMapAction(tileMapActionMsg);
                     break;
                 case Messages.Shared.SceneChanged sceneChangedMsg:
                 {
