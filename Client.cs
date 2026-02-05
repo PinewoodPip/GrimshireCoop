@@ -180,24 +180,27 @@ public class Client
                     Log($"Peer {peerId} changed to scene {sceneChangedMsg.SceneId}");
 
                     // Replicate owned objects to the peer
-                    foreach (var ownedObj in Plugin.GetOwnedSceneObjects())
+                    if (sceneChangedMsg.SceneId == CurrentSceneID)
                     {
-                        // Send create game object message
-                        string objectTypeID = ownedObj.NetTypeID == "ClientPlayer" ? "PeerPlayer" : ownedObj.NetTypeID;
-                        ReplicateObject replicateMsg = new() // TODO special type of message
+                        foreach (var ownedObj in Plugin.GetOwnedSceneObjects())
                         {
-                            OwnerPeerId = ownedObj.peerId,
-                            NetId = ownedObj.netId,
-                            GameObjectId = objectTypeID,
-                            Position = ownedObj.transform.position,
-                            SceneId = CurrentSceneID,
-                            TargetPeerId = peerId,
-                        };
-                        Log($"SceneChanged: Replicating object netId {ownedObj.netId} of type {objectTypeID} to peer {peerId} scene {CurrentSceneID}");
+                            // Send create game object message
+                            string objectTypeID = ownedObj.NetTypeID == "ClientPlayer" ? "PeerPlayer" : ownedObj.NetTypeID;
+                            ReplicateObject replicateMsg = new() // TODO special type of message
+                            {
+                                OwnerPeerId = ownedObj.peerId,
+                                NetId = ownedObj.netId,
+                                GameObjectId = objectTypeID,
+                                Position = ownedObj.transform.position,
+                                SceneId = CurrentSceneID,
+                                TargetPeerId = peerId,
+                            };
+                            Log($"SceneChanged: Replicating object netId {ownedObj.netId} of type {objectTypeID} to peer {peerId} scene {CurrentSceneID}");
 
-                        NetDataWriter writer = new NetDataWriter();
-                        replicateMsg.Serialize(writer);
-                        fromPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+                            NetDataWriter writer = new NetDataWriter();
+                            replicateMsg.Serialize(writer);
+                            fromPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+                        }
                     }
                     break;
                 }
