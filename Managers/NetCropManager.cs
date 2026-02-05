@@ -23,11 +23,7 @@ public static class NetCropManager
     [HarmonyPostfix]
     static void AfterCropObjectStart(CropObject __instance)
     {
-        if (Plugin.IsHost)
-        {
-            // Create networked object
-            Client.CreateNetObject<NetCropObject>(__instance.gameObject);
-        }
+        Client.TryCreateNetObject<NetCropObject>(__instance.gameObject);
     }
 
     [HarmonyPatch(typeof(CropObject), "Interact")]

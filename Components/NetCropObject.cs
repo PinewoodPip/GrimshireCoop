@@ -27,15 +27,32 @@ public class NetCropObject : NetworkedBehaviour
     {
         NetDataWriter writer = new NetDataWriter();
         var data = GetField<CropManager.PersistentCropData>(Crop, "persistenCropDataContainer"); // Field typo is from the game.
+
+        // Crop descriptor
+        writer.Put(Crop.cropReference.ID);
+
+        // Persistent data
         SerializeCropData(writer, data);
+
         return writer.CopyData();
     }
 
     public override void ApplyReplicationData(byte[] data)
     {
         NetDataReader reader = new NetDataReader(data);
+
+        // Crop descriptor
+        int cropID = reader.GetInt();
+        Crop.cropReference = ResourceManager.Instance.GetCropDataByID(cropID);
+
+        // Persistent data
         CropManager.PersistentCropData cropData = DeserializeCropData(reader);
-        SetField(Crop, "persistenCropDataContainer", cropData);
+        if (cropData.cropRefID != 0) // 0 means the struct was not initialized, ie. this is a new crop.
+        {
+            SetField(Crop, "persistenCropDataContainer", cropData);
+        }
+
+        Crop.Init(Crop.cropReference, "", 0, false); // From Seeds.UseItem()
     }
 
     public static void SerializeCropData(NetDataWriter writer, CropManager.PersistentCropData data)

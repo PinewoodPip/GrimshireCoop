@@ -321,6 +321,13 @@ public class Client
         return netObj;
     }
 
+    // Wraps an existing object with a networked behaviour or returns its existing net behaviour.
+    public static T TryCreateNetObject<T>(GameObject originalObj) where T : NetworkedBehaviour
+    {
+        T existingNetObj = originalObj.GetComponent<T>();
+        return existingNetObj ?? CreateNetObject<T>(originalObj);
+    }
+
     private static NetworkedBehaviour WrapNetObject(NetworkedBehaviour netObj, PeerId ownerPeerId, NetId netId)
     {
         netObj.SetPeerID(ownerPeerId);
