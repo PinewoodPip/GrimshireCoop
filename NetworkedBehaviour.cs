@@ -1,4 +1,5 @@
 
+using GrimshireCoop.Messages.Shared;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
@@ -46,6 +47,11 @@ public abstract class NetworkedBehaviour : MonoBehaviour
     }
 
     public virtual void NetworkUpdate() { }
+
+    public virtual void OnAction(ObjectAction action)
+    {
+        
+    }
 
     public virtual void Sync()
     {

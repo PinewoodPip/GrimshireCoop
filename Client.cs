@@ -9,6 +9,7 @@ using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop;
 
@@ -150,6 +151,19 @@ public class Client
                     PeerPlayer heldItemPeerPlayer = netObj as PeerPlayer;
                     heldItemPeerPlayer.SetHeldItem(setHeldItemMsg.ItemId);
                     break;
+                case Messages.Shared.RequestCreateTree requestCreateTreeMsg:
+                    Components.TreeObject netTree = CreateNetworkedObject(new CreateGameObject
+                    {
+                        GameObjectId = "TreeObject",
+                        NetId = requestCreateTreeMsg.NetId,
+                        OwnerPeerId = requestCreateTreeMsg.OwnerPeerId,
+                        Position = new Vector3(requestCreateTreeMsg.TreeData.posX, requestCreateTreeMsg.TreeData.posY, 0)
+                    }) as Components.TreeObject;
+                    netTree.Tree.PTreeDataContainer = requestCreateTreeMsg.TreeData;
+                    break;
+                case Messages.Shared.ObjectAction objectActionMsg:
+                    netObj.OnAction(objectActionMsg);
+                    break;
                 case Messages.Shared.SceneChanged sceneChangedMsg:
                 {
                     // Delete previous PeerPlayer
@@ -255,13 +269,19 @@ public class Client
 
                     return peerPlayerObj.AddComponent<PeerPlayer>();
                 }
+            case "TreeObject":
+                // TODO track in TreeManager
+                PersistentTreeManager treeManager = GameObject.FindObjectOfType<PersistentTreeManager>();
+                GameObject prefab = GetField<GameObject>(treeManager, "treeObjPrefab");
+                var instance = GameObject.Instantiate(prefab);
+                return instance.AddComponent<Components.TreeObject>();
             default:
                 LogWarning($"Unknown GameObjectId to create: {gameObjectId}");
                 return null;
         }
     }
 
-    private void CreateNetworkedObject(Messages.Server.CreateGameObject createGameObjectMsg)
+    private NetworkedBehaviour CreateNetworkedObject(Messages.Server.CreateGameObject createGameObjectMsg)
     {
         NetworkedBehaviour netObj = CreateGameObjectByType(createGameObjectMsg.GameObjectId, createGameObjectMsg.OwnerPeerId);
 
@@ -278,6 +298,8 @@ public class Client
 
         // Track it
         Plugin.RegisterNetObject(netObj, CurrentSceneID);
+
+        return netObj;    
     }
 
     public NetworkedBehaviour GetByNetID(NetId netId)

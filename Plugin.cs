@@ -19,6 +19,8 @@ public class Plugin : BaseUnityPlugin
     internal static PeerId serverPeerId;
     private static int HomeSceneLoadCount = 0;
 
+    public static bool IsHost => server.netManager.IsRunning;
+
     private static int usedNetIds = 0;
     public static NetId NextFreeNetId // TODO this should be kept in sync for everyone
     {
@@ -45,6 +47,8 @@ public class Plugin : BaseUnityPlugin
         { "Shared.ToolUsed", typeof(Messages.Shared.ToolUsed) },
         { "Shared.FaceDirection", typeof(Messages.Shared.FaceDirection) },
         { "Shared.SetHeldItem", typeof(Messages.Shared.SetHeldItem) },
+        { "Shared.RequestCreateTree", typeof(Messages.Shared.RequestCreateTree) },
+        { "Shared.ObjectAction", typeof(Messages.Shared.ObjectAction) },
         { "Shared.SceneChanged", typeof(Messages.Shared.SceneChanged) },
         { "Shared.ReplicateObject", typeof(Messages.Shared.ReplicateObject) },
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
@@ -61,6 +65,8 @@ public class Plugin : BaseUnityPlugin
         "Shared.ToolUsed",
         "Shared.FaceDirection",
         "Shared.SetHeldItem",
+        "Shared.RequestCreateTree",
+        "Shared.ObjectAction",
     };
 
     private void Awake()
@@ -69,6 +75,7 @@ public class Plugin : BaseUnityPlugin
         Logger.LogInfo($"{MyPluginInfo.PLUGIN_GUID} is loaded!");
 
         Harmony.CreateAndPatchAll(typeof(Plugin));
+        Harmony.CreateAndPatchAll(typeof(TreeManager));
 
         SceneManager.sceneLoaded += (scene, mode) =>
         {
