@@ -266,6 +266,11 @@ public class Client
                 GameObject prefab = GetField<GameObject>(treeManager, "treeObjPrefab");
                 var instance = GameObject.Instantiate(prefab);
                 return instance.AddComponent<Components.TreeObject>();
+            case "CropObject":
+                CropManager cropManager = GameManager.Instance.CropManager;
+                GameObject cropPrefab = GetField<GameObject>(cropManager, "cropObjPrefab");
+                var cropInstance = GameObject.Instantiate(cropPrefab);
+                return cropInstance.AddComponent<Components.NetCropObject>();
             default:
                 LogWarning($"Unknown GameObjectId to create: {gameObjectId}");
                 return null;

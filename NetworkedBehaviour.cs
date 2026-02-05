@@ -39,7 +39,8 @@ public abstract class NetworkedBehaviour : MonoBehaviour
 
     public void SendMsg(Message msg)
     {
-        if (!IsLocalPlayer) { Debug.LogWarning("Attempted to send message from non-local player"); return; }
+        // Not a very useful check, since we want to allow clients to interact with non-owned objects as well
+        // if (!IsLocalPlayer) { Debug.LogWarning("Attempted to send message from non-local player"); return; }
 
         NetDataWriter writer = new NetDataWriter();
         msg.Serialize(writer);
@@ -51,6 +52,22 @@ public abstract class NetworkedBehaviour : MonoBehaviour
     public virtual void OnAction(ObjectAction action)
     {
         
+    }
+
+    public void SendActionMsg(string actionID)
+    {
+        ObjectAction action = new()
+        {
+            OwnerPeerId = Plugin.client.ClientPeerId,
+            NetId = netId,
+            Action = actionID
+        };
+        SendMsg(action);
+    }
+
+    public void SendInteractionMsg()
+    {
+        SendActionMsg("Interact");
     }
 
     public virtual void Sync()

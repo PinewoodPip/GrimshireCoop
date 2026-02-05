@@ -73,8 +73,10 @@ public class Plugin : BaseUnityPlugin
         Logger = base.Logger;
         Logger.LogInfo($"{MyPluginInfo.PLUGIN_GUID} is loaded!");
 
+        // Apply patches
         Harmony.CreateAndPatchAll(typeof(Plugin));
         Harmony.CreateAndPatchAll(typeof(TreeManager));
+        Harmony.CreateAndPatchAll(typeof(NetCropManager));
 
         SceneManager.sceneLoaded += (scene, mode) =>
         {

@@ -1,0 +1,43 @@
+
+using GrimshireCoop.Components;
+using GrimshireCoop.Messages.Shared;
+using HarmonyLib;
+using LiteNetLib;
+using LiteNetLib.Utils;
+using UnityEngine;
+
+namespace GrimshireCoop;
+
+public static class NetCropManager
+{
+    public static bool ignoreHooks = false;
+
+    [HarmonyPatch(typeof(CropManager), "LoadCrops")]
+    [HarmonyPrefix]
+    static bool OnCropManagerLoadCrops(CropManager __instance)
+    {
+        return Plugin.IsHost; // TODO replace with ownership check for the scene
+    }
+
+    [HarmonyPatch(typeof(CropObject), "Start")]
+    [HarmonyPostfix]
+    static void AfterCropObjectStart(CropObject __instance)
+    {
+        if (Plugin.IsHost)
+        {
+            // Create networked object
+            Client.CreateNetObject<NetCropObject>(__instance.gameObject);
+        }
+    }
+
+    [HarmonyPatch(typeof(CropObject), "Interact")]
+    [HarmonyPostfix]
+    static void AfterCropObjectInteract(CropObject __instance)
+    {
+        if (ignoreHooks) return;
+
+        // Send action msg
+        NetCropObject netObj = __instance.GetComponent<NetCropObject>();
+        netObj?.SendInteractionMsg();
+    }
+}
