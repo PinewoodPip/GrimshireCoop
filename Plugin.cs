@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using UnityEngine;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -50,6 +51,7 @@ public class Plugin : BaseUnityPlugin
         { "Shared.ObjectAction", typeof(Messages.Shared.ObjectAction) },
         { "Shared.SceneChanged", typeof(Messages.Shared.SceneChanged) },
         { "Shared.ReplicateObject", typeof(Messages.Shared.ReplicateObject) },
+        { "Shared.SetRandomSeed", typeof(Messages.Shared.SetRandomSeed) },
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
     };
 
@@ -217,5 +219,20 @@ public class Plugin : BaseUnityPlugin
     {
         server?.Stop();
         client?.Dispose();
+    }
+
+    // Sync RNG seed.
+    [HarmonyPatch(typeof(GameManager), "SetRandomWithRandomSeed")]
+    [HarmonyPostfix]
+    static void AfterGameManagerSetRandomWithRandomSeed()
+    {
+        if (IsHost) // TODO should client be able to request this? The game has reseed calls in a lot of strange places
+        {
+            UnityEngine.Random.State state = UnityEngine.Random.state;
+            server.SendMsgToAll(new Messages.Shared.SetRandomSeed {
+                OwnerPeerId = serverPeerId,
+                RandomState = state
+            });
+        }
     }
 }

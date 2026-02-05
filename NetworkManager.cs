@@ -172,6 +172,9 @@ public class NetworkManager : INetEventListener
             case Messages.Shared.SetHeldItem setHeldItemMsg:
                 ForwardMsg(setHeldItemMsg);
                 break;
+            case Messages.Shared.SetRandomSeed setRandomSeedMsg:
+                ForwardMsg(setRandomSeedMsg);
+                break;
             case Messages.Shared.ObjectAction objectActionMsg:
                 ForwardMsg(objectActionMsg);
                 break;

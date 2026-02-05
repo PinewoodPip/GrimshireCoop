@@ -154,6 +154,9 @@ public class Client
                 case Messages.Shared.ObjectAction objectActionMsg:
                     netObj.OnAction(objectActionMsg);
                     break;
+                case Messages.Shared.SetRandomSeed setRandomSeedMsg:
+                    UnityEngine.Random.state = setRandomSeedMsg.RandomState;
+                    break;
                 case Messages.Shared.SceneChanged sceneChangedMsg:
                 {
                     // Delete previous PeerPlayer

@@ -74,4 +74,24 @@ public static class NetDataWriterReaderExtensions
         }
         return dict;
     }
+
+    public static void PutRandomState(this NetDataWriter writer, Random.State state)
+    {
+        writer.Put(state.s0);
+        writer.Put(state.s1);
+        writer.Put(state.s2);
+        writer.Put(state.s3);
+    }
+
+    public static Random.State GetRandomState(this NetDataReader reader)
+    {
+        Random.State state = new()
+        {
+            s0 = reader.GetInt(),
+            s1 = reader.GetInt(),
+            s2 = reader.GetInt(),
+            s3 = reader.GetInt()
+        };
+        return state;
+    }
 }
