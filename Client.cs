@@ -227,15 +227,6 @@ public class Client
         Log($"Creating networked GameObject {gameObjectId}");
         switch (gameObjectId)
         {
-            case "DummyPlayer":
-                GameObject dummyPlayerPrefab = new GameObject("Coop.NetPlayerDummyPrefab");
-                DummyPlayer player = dummyPlayerPrefab.AddComponent<DummyPlayer>();
-                SpriteRenderer renderer = dummyPlayerPrefab.AddComponent<SpriteRenderer>();
-
-                GameObject.DontDestroyOnLoad(dummyPlayerPrefab);
-                dummyPlayerPrefab.SetActive(true);
-
-                return player;
             case "PeerPlayer":
                 if (ownerPeerId == ClientPeerId)
                 {
