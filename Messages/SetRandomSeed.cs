@@ -7,8 +7,8 @@ namespace GrimshireCoop.Messages.Host;
 public class SetRandomSeed : OwnedMessage
 {
     public override string MessageType => "Host.SetRandomSeed";
-
     public override Direction SyncDirection => Direction.ClientToPeers;
+    public override bool IsLocal => false;
 
     public Random.State RandomState;
 

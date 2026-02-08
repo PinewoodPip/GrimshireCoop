@@ -6,8 +6,8 @@ namespace GrimshireCoop.Messages.Client;
 public class ObjectAction : NetObjectMessage
 {
     public override string MessageType => "Client.ObjectAction";
-
     public override Direction SyncDirection => Direction.ClientToPeers;
+    public override bool IsLocal => true;
 
     public string Action;
 

@@ -8,7 +8,6 @@ namespace GrimshireCoop.Messages.Client;
 public class CreateGameObject : Message
 {
     public override string MessageType => "Client.CreateGameObject";
-
     public override Direction SyncDirection => Direction.ClientToPeers;
 
     public string GameObjectId;

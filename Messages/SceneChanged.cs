@@ -7,8 +7,8 @@ namespace GrimshireCoop.Messages.Client;
 public class SceneChanged : OwnedMessage
 {
     public override string MessageType => "Client.SceneChanged";
-
     public override Direction SyncDirection => Direction.ClientToPeers;
+    public override bool IsLocal => false; // All clients should keep track of which scenes peers are in.
 
     public string SceneId;
     public NetId ClientPlayerNetId;

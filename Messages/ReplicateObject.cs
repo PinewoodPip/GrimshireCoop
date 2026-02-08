@@ -7,8 +7,8 @@ namespace GrimshireCoop.Messages.Client;
 public class ReplicateObject : NetObjectMessage
 {
     public override string MessageType => "Client.ReplicateObject";
-
     public override Direction SyncDirection => Direction.ClientToPeers;
+    public override bool IsLocal => true;
 
     public string GameObjectId;
     public Vector3 Position;

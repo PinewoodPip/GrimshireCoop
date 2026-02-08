@@ -6,8 +6,8 @@ namespace GrimshireCoop.Messages.Client;
 public class ToolUsed : NetObjectMessage
 {
     public override string MessageType => "Client.ToolUsed";
-
     public override Direction SyncDirection => Direction.ClientToPeers;
+    public override bool IsLocal => true;
 
     public enum ToolType : byte
     {

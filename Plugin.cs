@@ -57,23 +57,6 @@ public class Plugin : BaseUnityPlugin
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
     };
 
-    // Messages that should only be handled if they come from a client in the same scene.
-    public static HashSet<string> LocalSceneMessages = new HashSet<string>
-    {
-        "Server.CreatePlayer",
-        "Client.CreateGameObject",
-        "Client.Position",
-        "Client.Movement",
-        "Client.StoppedMoving",
-        "Client.ToolUsed",
-        "Client.FaceDirection",
-        "Client.SetHeldItem",
-        "Client.ReplicateObject",
-        "Client.ObjectAction",
-        "Client.ObjectPositionedAction",
-        "Client.TileMapAction",
-    };
-
     private void Awake()
     {
         Logger = base.Logger;

@@ -7,7 +7,6 @@ namespace GrimshireCoop.Messages.Server;
 public class CreatePlayer : Message
 {
     public override string MessageType => "Server.CreatePlayer";
-
     public override Direction SyncDirection => Direction.ServerToClient;
 
     public Vector3 Position;

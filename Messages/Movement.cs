@@ -7,8 +7,8 @@ namespace GrimshireCoop.Messages.Client;
 public class Movement : NetObjectMessage
 {
     public override string MessageType => "Client.Movement";
-
     public override Direction SyncDirection => Direction.ClientToPeers;
+    public override bool IsLocal => true;
 
     public Vector3 OldPosition;
     public Vector3 NewPosition;

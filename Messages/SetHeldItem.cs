@@ -7,6 +7,7 @@ public class SetHeldItem : NetObjectMessage
 {
     public override string MessageType => "Client.SetHeldItem";
     public override Direction SyncDirection => Direction.ClientToPeers;
+    public override bool IsLocal => true;
 
     public int ItemId; // -1 for no item.
 

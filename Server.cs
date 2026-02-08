@@ -120,14 +120,13 @@ public class Server : INetEventListener
     public void ForwardMsg(OwnedMessage msg)
     {
         string ownerScene = Plugin.GetPeerScene(msg.OwnerPeerId);
-        bool isLocalMessage = Plugin.LocalSceneMessages.Contains(msg.MessageType);
         writer.Reset();
         foreach (var peer in netManager.ConnectedPeerList)
         {
             string peerScene = Plugin.GetPeerScene(peer.Id);
             bool isSender = peer.Id == msg.OwnerPeerId;
             bool isPeerInOwnerScene = peerScene == ownerScene;
-            bool canForward = !isSender && (!isLocalMessage || isPeerInOwnerScene); // Interest management: only forward local messages to peers in the same scene as the owner
+            bool canForward = !isSender && (!msg.IsLocal || isPeerInOwnerScene); // Interest management: only forward local messages to peers in the same scene as the owner
             if (canForward)
             {
                 msg.Serialize(writer);
