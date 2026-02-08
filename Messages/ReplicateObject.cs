@@ -8,7 +8,7 @@ public class ReplicateObject : NetObjectMessage
 {
     public override string MessageType => "Client.ReplicateObject";
 
-    public override Direction SyncDirection => Direction.ClientToServer;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public string GameObjectId;
     public Vector3 Position;

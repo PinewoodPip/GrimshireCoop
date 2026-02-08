@@ -6,7 +6,7 @@ namespace GrimshireCoop.Messages.Client;
 public class SetHeldItem : NetObjectMessage
 {
     public override string MessageType => "Client.SetHeldItem";
-    public override Direction SyncDirection => Direction.ClientToServer;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public int ItemId; // -1 for no item.
 

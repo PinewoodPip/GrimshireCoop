@@ -14,7 +14,7 @@ namespace GrimshireCoop;
 public class Plugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger;
-    internal static NetworkManager server;
+    internal static Server server;
     internal static Client client;
     internal static int PORT = 9050;
     internal static PeerId serverPeerId;
@@ -103,7 +103,7 @@ public class Plugin : BaseUnityPlugin
     {
         Logger.LogInfo("Starting server...");
 
-        var manager = new NetworkManager();
+        var manager = new Server();
         server = manager;
 
         // Check if port is in use

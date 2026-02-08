@@ -8,7 +8,7 @@ public class SceneChanged : OwnedMessage
 {
     public override string MessageType => "Client.SceneChanged";
 
-    public override Direction SyncDirection => Direction.ClientToServer;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public string SceneId;
     public NetId ClientPlayerNetId;

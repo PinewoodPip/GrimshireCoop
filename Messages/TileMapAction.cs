@@ -15,7 +15,7 @@ public class TileMapAction : OwnedMessage
 
     public override string MessageType => "Client.TileMapAction";
 
-    public override Direction SyncDirection => Direction.ClientToServer;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public Vector3 Position;
     public ActionType Action;

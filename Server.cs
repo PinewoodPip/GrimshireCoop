@@ -14,18 +14,20 @@ using UnityEngine.SceneManagement;
 
 namespace GrimshireCoop;
 
-public class NetworkManager : INetEventListener
+public class Server : INetEventListener
 {
-    internal NetManager netManager;
-    private NetDataWriter writer;
-    private const int Port = 9050;
-    private const string ConnectionKey = "GrimshireCoopKey";
-    private ManualLogSource Logger = Plugin.Logger;
+    public static readonly string CONNECTION_KEY = "GrimshireCoop";
+    public static readonly int PORT = 9050;
+    public static readonly int MAX_PLAYERS = 2; // TODO allow more
 
-    private Dictionary<int, Vector3> playerPositions = new Dictionary<int, Vector3>();
+    internal NetManager netManager;
+
     private Dictionary<int, NetPeer> peers = new Dictionary<PeerId, NetPeer>();
 
-    public NetworkManager()
+    private NetDataWriter writer;
+    private ManualLogSource Logger = Plugin.Logger;
+
+    public Server()
     {
         netManager = new NetManager(this);
         writer = new NetDataWriter();
@@ -39,8 +41,8 @@ public class NetworkManager : INetEventListener
     // Connect to server
     public void ConnectToServer(string address)
     {
-        netManager.Connect(address, Port, ConnectionKey);
-        Logger.LogInfo($"Connecting to {address}:{Port}");
+        netManager.Connect(address, PORT, CONNECTION_KEY);
+        Logger.LogInfo($"Connecting to {address}:{PORT}");
     }
 
     public void Stop()
@@ -132,7 +134,6 @@ public class NetworkManager : INetEventListener
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
         LogServer($"Peer disconnected: {peer.Id}, reason: {disconnectInfo.Reason}");
-        playerPositions.Remove(peer.Id);
         peers.Remove(peer.Id);
     }
 
@@ -145,56 +146,44 @@ public class NetworkManager : INetEventListener
     {
         LogServer($"Server received data from client {peer.Id} bytes {reader.AvailableBytes}");
 
-        var msgType = reader.GetString(100);
-        Type msgClass = Plugin.MessageTypes[msgType];
-
-        Message msg = Activator.CreateInstance(msgClass, reader) as Message;
-        
-        // Handle the message (mostly forwarding)
-        LogServer($"Deserialized message of type: {msg.MessageType}");
-        switch (msg)
+        // Parse the message
+        try
         {
-            case Messages.Client.Position positionMsg:
-                ForwardMsg(positionMsg);
-                break;
-            case Messages.Client.Movement movementMsg:
-                ForwardMsg(movementMsg);
-                break;
-            case Messages.Client.StoppedMoving stoppedMovingMsg:
-                ForwardMsg(stoppedMovingMsg);
-                break;
-            case Messages.Client.ToolUsed toolUsedMsg:
-                ForwardMsg(toolUsedMsg);
-                break;
-            case Messages.Client.FaceDirection faceDirectionMsg:
-                ForwardMsg(faceDirectionMsg);
-                break;
-            case Messages.Client.SetHeldItem setHeldItemMsg:
-                ForwardMsg(setHeldItemMsg);
-                break;
-            case Messages.Host.SetRandomSeed setRandomSeedMsg:
-                ForwardMsg(setRandomSeedMsg);
-                break;
-            case Messages.Client.TileMapAction tileMapActionMsg:
-                ForwardMsg(tileMapActionMsg);
-                break;
-            case Messages.Client.ObjectAction objectActionMsg: // Will handle derived msgs as well.
-                ForwardMsg(objectActionMsg);
-                break;
-            case Messages.Client.SceneChanged sceneChangedMsg:
-                LogServer($"Peer {peer.Id} changed scene to {sceneChangedMsg.SceneId}");
-                ForwardMsg(sceneChangedMsg);
-                break;
-            case Messages.Client.ReplicateObject replicateObjectMsg:
-                LogServer($"Peer {peer.Id} replicated object {replicateObjectMsg.NetId} in scene {replicateObjectMsg.SceneId} to peer {replicateObjectMsg.TargetPeerId}");
-                ForwardMsg(replicateObjectMsg);
-                break;
-            default:
-                LogWarning($"Unknown message type received: {msgType}");
-                break;
-        }
+            var msgType = reader.GetString(100);
+            Type msgClass = Plugin.MessageTypes[msgType];
+            Message msg = Activator.CreateInstance(msgClass, reader) as Message;
 
-        reader.Recycle();
+            // Forward messages that are meant to be resent to other peers
+            if (msg is OwnedMessage ownedMsg && ownedMsg.SyncDirection == Message.Direction.ClientToPeers)
+            {
+                ForwardMsg(ownedMsg);
+                return;
+            }
+
+            // Sanity check for sync direction
+            if (msg.SyncDirection == Message.Direction.ServerToClient)
+            {
+                throw new Exception($"[Server] Received message with ServerToClient direction: {msgType}");
+            }
+            
+            // Handle client-to-server messages
+            LogServer($"Deserialized message of type: {msg.MessageType}");
+            switch (msg)
+            {
+                // Placeholder as there are no non-forwarded client-to-server messages yet.
+                default:
+                    LogError($"Unknown message type received: {msgType}");
+                    break;
+            }
+
+            reader.Recycle();
+        }
+        catch (Exception ex)
+        {
+            LogError($"Failed to parse message from peer {peer.Id}: {ex}");
+            // Need to clear the reader to prevent this message from getting stuck in the queue (if it were to trigger an exception again)
+            reader.Recycle();
+        }
     }
 
     public void LogServer(string message)
@@ -205,6 +194,11 @@ public class NetworkManager : INetEventListener
     public void LogWarning(string message)
     {
         Logger.LogWarning($"[Server] {message}");
+    }
+
+    public void LogError(string message)
+    {
+        Logger.LogError($"[Server] {message}");
     }
 
     public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
@@ -218,9 +212,9 @@ public class NetworkManager : INetEventListener
 
     public void OnConnectionRequest(ConnectionRequest request)
     {
-        if (netManager.ConnectedPeersCount < 2) // TODO
+        if (netManager.ConnectedPeersCount < MAX_PLAYERS)
         {
-            request.AcceptIfKey(ConnectionKey);
+            request.AcceptIfKey(CONNECTION_KEY);
             LogServer($"Connection request accepted from {request.RemoteEndPoint}");
         }
         else

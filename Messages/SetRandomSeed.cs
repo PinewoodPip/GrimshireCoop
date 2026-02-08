@@ -8,7 +8,7 @@ public class SetRandomSeed : OwnedMessage
 {
     public override string MessageType => "Host.SetRandomSeed";
 
-    public override Direction SyncDirection => Direction.ServerToClient;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public Random.State RandomState;
 

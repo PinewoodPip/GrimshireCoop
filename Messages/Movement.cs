@@ -8,7 +8,7 @@ public class Movement : NetObjectMessage
 {
     public override string MessageType => "Client.Movement";
 
-    public override Direction SyncDirection => Direction.ServerToClient;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public Vector3 OldPosition;
     public Vector3 NewPosition;

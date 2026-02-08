@@ -7,7 +7,7 @@ public class ToolUsed : NetObjectMessage
 {
     public override string MessageType => "Client.ToolUsed";
 
-    public override Direction SyncDirection => Direction.ServerToClient;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public enum ToolType : byte
     {

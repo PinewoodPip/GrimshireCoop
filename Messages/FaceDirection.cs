@@ -7,7 +7,7 @@ public class FaceDirection : NetObjectMessage
 {
     public override string MessageType => "Client.FaceDirection";
 
-    public override Direction SyncDirection => Direction.ServerToClient;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     // Note: this is world pos to face, not a direction
     public float PosX;

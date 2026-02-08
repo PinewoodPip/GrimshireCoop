@@ -47,7 +47,7 @@ public class Client
         var listener = new EventBasedNetListener();
         netManager = new NetManager(listener);
         netManager.Start();
-        netManager.Connect("localhost", 9050, "GrimshireCoopKey");
+        netManager.Connect("localhost", Server.PORT, Server.CONNECTION_KEY); // TODO configurable address
 
         listener.PeerConnectedEvent += (peer) =>
         {
@@ -66,6 +66,12 @@ public class Client
             
             // Handle the message
             Log($"Deserialized message of type: {msg.MessageType}");
+
+            // Sanity check for sync direction
+            if (msg.SyncDirection == Message.Direction.ClientToServer)
+            {
+                throw new Exception($"[Client] Received message with ClientToServer direction: {msgType}");
+            }
 
             // Interest management: ignore messages from clients in other scenes)
             if (Plugin.LocalSceneMessages.Contains(msg.MessageType) && msg is OwnedMessage ownedMessage && Plugin.PeerScenes[ownedMessage.OwnerPeerId] != CurrentSceneID)

@@ -7,7 +7,7 @@ public class ObjectAction : NetObjectMessage
 {
     public override string MessageType => "Client.ObjectAction";
 
-    public override Direction SyncDirection => Direction.ClientToServer;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public string Action;
 

@@ -8,7 +8,7 @@ public class Position : NetObjectMessage
 {
     public override string MessageType => "Client.Position";
 
-    public override Direction SyncDirection => Direction.ServerToClient;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public Vector3 Pos;
 

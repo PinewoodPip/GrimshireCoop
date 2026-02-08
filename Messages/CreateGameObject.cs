@@ -9,7 +9,7 @@ public class CreateGameObject : Message
 {
     public override string MessageType => "Client.CreateGameObject";
 
-    public override Direction SyncDirection => Direction.ClientToServer;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public string GameObjectId;
     public NetId NetId;

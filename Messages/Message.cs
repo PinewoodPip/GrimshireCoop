@@ -8,10 +8,15 @@ public abstract class Message
     public enum Direction
     {
         ServerToClient,
-        ClientToServer
+        ClientToServer,
+        ClientToPeers, // Sent from a client to all others (forward by server)
     }
 
     public abstract string MessageType { get; } // TODO build an index of these so we don't serialize strings with each message
+
+    /// <summary>
+    /// The flow direction of the message; ie. who sends it and to whom.
+    /// </summary>
     public abstract Direction SyncDirection { get; }
 
     public virtual void Serialize(NetDataWriter writer)

@@ -7,7 +7,7 @@ public class StoppedMoving : NetObjectMessage
 {
     public override string MessageType => "Client.StoppedMoving";
 
-    public override Direction SyncDirection => Direction.ServerToClient;
+    public override Direction SyncDirection => Direction.ClientToPeers;
 
     public StoppedMoving() { }
 
