@@ -17,12 +17,13 @@ namespace GrimshireCoop;
 public class Server : INetEventListener
 {
     public static readonly string CONNECTION_KEY = "GrimshireCoop";
+    public static readonly SceneId STARTING_SCENE = "Interior_Home_Scene"; // Scene new clients start in.
     public static readonly int PORT = 9050;
     public static readonly int MAX_PLAYERS = 2; // TODO allow more
 
     internal NetManager netManager;
 
-    private Dictionary<int, NetPeer> peers = new Dictionary<PeerId, NetPeer>();
+    private Dictionary<PeerId, NetPeer> peers = [];
 
     private NetDataWriter writer;
     private ManualLogSource Logger = Plugin.Logger;
@@ -56,14 +57,13 @@ public class Server : INetEventListener
     {
         LogServer($"Peer connected: {peer.Id}");
         peers[peer.Id] = peer;
-
-        Plugin.PeerScenes[peer.Id] = SceneManager.GetActiveScene().name; // TODO! peer might've joined from another scene
+        Plugin.PeerScenes[peer.Id] = STARTING_SCENE; // TODO do we want peers to be able to join from another scene?
 
         // Assign Peer ID
         SendMsg(peer.Id, new AssignPeerId
         {
             PeerId = peer.Id,
-            PeerScenes = new Dictionary<int, string>(Plugin.PeerScenes)
+            PeerScenes = new Dictionary<PeerId, SceneId>(Plugin.PeerScenes)
         });
 
         // Replicate existing objects for the new peer
@@ -119,10 +119,16 @@ public class Server : INetEventListener
 
     public void ForwardMsg(OwnedMessage msg)
     {
+        string ownerScene = Plugin.GetPeerScene(msg.OwnerPeerId);
+        bool isLocalMessage = Plugin.LocalSceneMessages.Contains(msg.MessageType);
         writer.Reset();
         foreach (var peer in netManager.ConnectedPeerList)
         {
-            if (peer.Id != msg.OwnerPeerId)
+            string peerScene = Plugin.GetPeerScene(peer.Id);
+            bool isSender = peer.Id == msg.OwnerPeerId;
+            bool isPeerInOwnerScene = peerScene == ownerScene;
+            bool canForward = !isSender && (!isLocalMessage || isPeerInOwnerScene); // Interest management: only forward local messages to peers in the same scene as the owner
+            if (canForward)
             {
                 msg.Serialize(writer);
                 peer.Send(writer, DeliveryMethod.ReliableOrdered);
@@ -156,24 +162,32 @@ public class Server : INetEventListener
             // Forward messages that are meant to be resent to other peers
             if (msg is OwnedMessage ownedMsg && ownedMsg.SyncDirection == Message.Direction.ClientToPeers)
             {
-                ForwardMsg(ownedMsg);
-                return;
-            }
+                // Update tracking which scene peers are in
+                if (msg is SceneChanged sceneChangedMsg)
+                {
+                    LogServer($"Peer {peer.Id} changed to scene {sceneChangedMsg.SceneId}");
+                    Plugin.PeerScenes[peer.Id] = sceneChangedMsg.SceneId;
+                }
 
-            // Sanity check for sync direction
-            if (msg.SyncDirection == Message.Direction.ServerToClient)
-            {
-                throw new Exception($"[Server] Received message with ServerToClient direction: {msgType}");
+                ForwardMsg(ownedMsg);
             }
-            
-            // Handle client-to-server messages
-            LogServer($"Deserialized message of type: {msg.MessageType}");
-            switch (msg)
+            else
             {
-                // Placeholder as there are no non-forwarded client-to-server messages yet.
-                default:
-                    LogError($"Unknown message type received: {msgType}");
-                    break;
+                // Sanity check for sync direction
+                if (msg.SyncDirection == Message.Direction.ServerToClient)
+                {
+                    throw new Exception($"[Server] Received message with ServerToClient direction: {msgType}");
+                }
+                
+                // Handle client-to-server messages
+                LogServer($"Deserialized message of type: {msg.MessageType}");
+                switch (msg)
+                {
+                    // Placeholder as there are no non-forwarded client-to-server messages yet.
+                    default:
+                        LogError($"Unknown message type received: {msgType}");
+                        break;
+                }
             }
 
             reader.Recycle();

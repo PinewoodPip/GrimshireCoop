@@ -201,6 +201,12 @@ public class Plugin : BaseUnityPlugin
         return ownedObjects;
     }
 
+    // TODO move to some dedicated shared object manager class
+    public static string GetPeerScene(PeerId peerId)
+    {
+        return PeerScenes[peerId];
+    }
+
     private void LateUpdate()
     {
         // Poll network events

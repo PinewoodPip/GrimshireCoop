@@ -73,13 +73,6 @@ public class Client
                 throw new Exception($"[Client] Received message with ClientToServer direction: {msgType}");
             }
 
-            // Interest management: ignore messages from clients in other scenes)
-            if (Plugin.LocalSceneMessages.Contains(msg.MessageType) && msg is OwnedMessage ownedMessage && Plugin.PeerScenes[ownedMessage.OwnerPeerId] != CurrentSceneID)
-            {
-                Log($"Ignoring message {msg.MessageType} from peer {ownedMessage.OwnerPeerId} in scene {Plugin.PeerScenes[ownedMessage.OwnerPeerId]} (current scene {CurrentSceneID})");
-                return;
-            }
-
             // Fetch the target net object if applicable
             NetworkedBehaviour netObj = null;
             if (msg is NetObjectMessage netObjectMsg)
