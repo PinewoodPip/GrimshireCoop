@@ -1,12 +1,12 @@
-using GrimshireCoop.Network.Messages;
+
 using LiteNetLib.Utils;
 using UnityEngine;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Host;
 
 public class SetRandomSeed : OwnedMessage
 {
-    public override string MessageType => "Shared.SetRandomSeed";
+    public override string MessageType => "Host.SetRandomSeed";
 
     public override Direction SyncDirection => Direction.ServerToClient;
 

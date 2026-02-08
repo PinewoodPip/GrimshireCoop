@@ -1,11 +1,11 @@
-using GrimshireCoop.Network.Messages;
+
 using LiteNetLib.Utils;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Client;
 
 public class SetHeldItem : NetObjectMessage
 {
-    public override string MessageType => "Shared.SetHeldItem";
+    public override string MessageType => "Client.SetHeldItem";
     public override Direction SyncDirection => Direction.ClientToServer;
 
     public int ItemId; // -1 for no item.

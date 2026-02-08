@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using BepInEx;
 using BepInEx.Logging;
+using GrimshireCoop.Messages;
+using GrimshireCoop.Messages.Client;
 using GrimshireCoop.Messages.Server;
-using GrimshireCoop.Network.Messages;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
@@ -154,38 +154,38 @@ public class NetworkManager : INetEventListener
         LogServer($"Deserialized message of type: {msg.MessageType}");
         switch (msg)
         {
-            case Messages.Shared.Position positionMsg:
+            case Messages.Client.Position positionMsg:
                 ForwardMsg(positionMsg);
                 break;
-            case Messages.Shared.Movement movementMsg:
+            case Messages.Client.Movement movementMsg:
                 ForwardMsg(movementMsg);
                 break;
-            case Messages.Shared.StoppedMoving stoppedMovingMsg:
+            case Messages.Client.StoppedMoving stoppedMovingMsg:
                 ForwardMsg(stoppedMovingMsg);
                 break;
-            case Messages.Shared.ToolUsed toolUsedMsg:
+            case Messages.Client.ToolUsed toolUsedMsg:
                 ForwardMsg(toolUsedMsg);
                 break;
-            case Messages.Shared.FaceDirection faceDirectionMsg:
+            case Messages.Client.FaceDirection faceDirectionMsg:
                 ForwardMsg(faceDirectionMsg);
                 break;
-            case Messages.Shared.SetHeldItem setHeldItemMsg:
+            case Messages.Client.SetHeldItem setHeldItemMsg:
                 ForwardMsg(setHeldItemMsg);
                 break;
-            case Messages.Shared.SetRandomSeed setRandomSeedMsg:
+            case Messages.Host.SetRandomSeed setRandomSeedMsg:
                 ForwardMsg(setRandomSeedMsg);
                 break;
-            case Messages.Shared.TileMapAction tileMapActionMsg:
+            case Messages.Client.TileMapAction tileMapActionMsg:
                 ForwardMsg(tileMapActionMsg);
                 break;
-            case Messages.Shared.ObjectAction objectActionMsg: // Will handle derived msgs as well.
+            case Messages.Client.ObjectAction objectActionMsg: // Will handle derived msgs as well.
                 ForwardMsg(objectActionMsg);
                 break;
-            case Messages.Shared.SceneChanged sceneChangedMsg:
+            case Messages.Client.SceneChanged sceneChangedMsg:
                 LogServer($"Peer {peer.Id} changed scene to {sceneChangedMsg.SceneId}");
                 ForwardMsg(sceneChangedMsg);
                 break;
-            case Messages.Shared.ReplicateObject replicateObjectMsg:
+            case Messages.Client.ReplicateObject replicateObjectMsg:
                 LogServer($"Peer {peer.Id} replicated object {replicateObjectMsg.NetId} in scene {replicateObjectMsg.SceneId} to peer {replicateObjectMsg.TargetPeerId}");
                 ForwardMsg(replicateObjectMsg);
                 break;

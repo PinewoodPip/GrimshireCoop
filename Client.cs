@@ -2,9 +2,8 @@
 using System;
 using System.Collections.Generic;
 using BepInEx.Logging;
-using GrimshireCoop.Messages.Server;
-using GrimshireCoop.Messages.Shared;
-using GrimshireCoop.Network.Messages;
+using GrimshireCoop.Messages;
+using GrimshireCoop.Messages.Client;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
@@ -95,7 +94,7 @@ public class Client
                     break;
                 case Messages.Server.CreatePlayer createPlayerMsg:
                     break;
-                case Messages.Shared.ReplicateObject replicateObjectMsg:
+                case Messages.Client.ReplicateObject replicateObjectMsg:
                     // Only replicate if the message is for this client
                     int targetPeerId = replicateObjectMsg.TargetPeerId;
                     if (targetPeerId != -1 && targetPeerId != ClientPeerId)
@@ -113,13 +112,13 @@ public class Client
                     });
                     replicatedObj.ApplyReplicationData(replicateObjectMsg.ReplicationData);
                     break;
-                case Messages.Server.CreateGameObject createGameObjectMsg:
+                case Messages.Client.CreateGameObject createGameObjectMsg:
                     CreateNetworkedObject(createGameObjectMsg);
                     break;
-                case Messages.Shared.Position positionMsg:
+                case Messages.Client.Position positionMsg:
                     netObj.transform.position = positionMsg.Pos;
                     break;
-                case Messages.Shared.Movement movementMsg:
+                case Messages.Client.Movement movementMsg:
                     // Animate - should be done before setting pos so the facing dir vector is correct
                     if (netObj is PeerPlayer peerPlayer)
                     {
@@ -128,39 +127,39 @@ public class Client
 
                     netObj.transform.position = movementMsg.NewPosition;
                     break;
-                case Messages.Shared.StoppedMoving stoppedMovingMsg:
+                case Messages.Client.StoppedMoving stoppedMovingMsg:
                     if (netObj is PeerPlayer stoppedPeerPlayer)
                     {
                         stoppedPeerPlayer.OnStoppedMoving();
                     }
                     break;
-                case Messages.Shared.ToolUsed toolUsedMsg:
+                case Messages.Client.ToolUsed toolUsedMsg:
                     if (netObj is PeerPlayer toolUserPeerPlayer)
                     {
                         toolUserPeerPlayer.PlayToolUseAnimation(toolUsedMsg.ToolId);
                     }
                     break;
-                case Messages.Shared.FaceDirection faceDirectionMsg:
+                case Messages.Client.FaceDirection faceDirectionMsg:
                     Debug.Log($"FaceDirection message received for netId {faceDirectionMsg.NetId} dirX {faceDirectionMsg.PosX} dirY {faceDirectionMsg.PosY}");
                     if (netObj is PeerPlayer facingPeerPlayer)
                     {
                         facingPeerPlayer.FaceTowards(new Vector2(faceDirectionMsg.PosX, faceDirectionMsg.PosY));
                     }
                     break;
-                case Messages.Shared.SetHeldItem setHeldItemMsg:
+                case Messages.Client.SetHeldItem setHeldItemMsg:
                     PeerPlayer heldItemPeerPlayer = netObj as PeerPlayer;
                     heldItemPeerPlayer.SetHeldItem(setHeldItemMsg.ItemId);
                     break;
-                case Messages.Shared.ObjectAction objectActionMsg: // Will handle derived msgs as well.
+                case Messages.Client.ObjectAction objectActionMsg: // Will handle derived msgs as well.
                     netObj.OnAction(objectActionMsg);
                     break;
-                case Messages.Shared.SetRandomSeed setRandomSeedMsg:
+                case Messages.Host.SetRandomSeed setRandomSeedMsg:
                     UnityEngine.Random.state = setRandomSeedMsg.RandomState;
                     break;
-                case Messages.Shared.TileMapAction tileMapActionMsg:
+                case Messages.Client.TileMapAction tileMapActionMsg:
                     NetTileMapManager.HandleTileMapAction(tileMapActionMsg);
                     break;
-                case Messages.Shared.SceneChanged sceneChangedMsg:
+                case Messages.Client.SceneChanged sceneChangedMsg:
                 {
                     // Delete previous PeerPlayer
                     PeerPlayer[] allPeers = GameObject.FindObjectsOfType<PeerPlayer>();
@@ -283,7 +282,7 @@ public class Client
         }
     }
 
-    private NetworkedBehaviour CreateNetworkedObject(Messages.Server.CreateGameObject createGameObjectMsg)
+    private NetworkedBehaviour CreateNetworkedObject(Messages.Client.CreateGameObject createGameObjectMsg)
     {
         NetworkedBehaviour netObj = CreateGameObjectByType(createGameObjectMsg.GameObjectId, createGameObjectMsg.OwnerPeerId);
 

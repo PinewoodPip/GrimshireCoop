@@ -1,8 +1,8 @@
-using GrimshireCoop.Network.Messages;
+
 using LiteNetLib.Utils;
 using UnityEngine;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Client;
 
 public class TileMapAction : OwnedMessage
 {
@@ -13,7 +13,7 @@ public class TileMapAction : OwnedMessage
         Water,
     }
 
-    public override string MessageType => "Shared.TileMapAction";
+    public override string MessageType => "Client.TileMapAction";
 
     public override Direction SyncDirection => Direction.ClientToServer;
 

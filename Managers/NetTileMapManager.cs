@@ -1,9 +1,6 @@
 
-using GrimshireCoop.Components;
-using GrimshireCoop.Messages.Shared;
+using GrimshireCoop.Messages.Client;
 using HarmonyLib;
-using LiteNetLib;
-using LiteNetLib.Utils;
 using UnityEngine;
 
 namespace GrimshireCoop;

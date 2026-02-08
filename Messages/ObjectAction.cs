@@ -1,12 +1,11 @@
-using GrimshireCoop.Network.Messages;
-using LiteNetLib.Utils;
-using static Message;
 
-namespace GrimshireCoop.Messages.Shared;
+using LiteNetLib.Utils;
+
+namespace GrimshireCoop.Messages.Client;
 
 public class ObjectAction : NetObjectMessage
 {
-    public override string MessageType => "Shared.ObjectAction";
+    public override string MessageType => "Client.ObjectAction";
 
     public override Direction SyncDirection => Direction.ClientToServer;
 

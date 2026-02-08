@@ -1,7 +1,7 @@
 
 using LiteNetLib.Utils;
 
-namespace GrimshireCoop.Network.Messages;
+namespace GrimshireCoop.Messages;
 
 public abstract class NetObjectMessage : OwnedMessage
 {

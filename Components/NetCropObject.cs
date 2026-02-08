@@ -1,8 +1,7 @@
 
-using GrimshireCoop.Messages.Shared;
+using GrimshireCoop.Messages.Client;
 using LiteNetLib.Utils;
 using Newtonsoft.Json;
-using UnityEngine;
 using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop.Components;

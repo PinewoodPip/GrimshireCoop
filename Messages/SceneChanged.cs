@@ -1,15 +1,12 @@
 
-using GrimshireCoop.Network;
-using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
 using UnityEngine;
-using static Message;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Client;
 
 public class SceneChanged : OwnedMessage
 {
-    public override string MessageType => "Shared.SceneChanged";
+    public override string MessageType => "Client.SceneChanged";
 
     public override Direction SyncDirection => Direction.ClientToServer;
 

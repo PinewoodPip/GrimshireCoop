@@ -41,18 +41,19 @@ public class Plugin : BaseUnityPlugin
     public static Dictionary<string, Type> MessageTypes = new Dictionary<string, Type>
     {
         { "Server.CreatePlayer", typeof(Messages.Server.CreatePlayer) },
-        { "Server.CreateGameObject", typeof(Messages.Server.CreateGameObject) },
-        { "Shared.Position", typeof(Messages.Shared.Position) },
-        { "Shared.Movement", typeof(Messages.Shared.Movement) },
-        { "Shared.StoppedMoving", typeof(Messages.Shared.StoppedMoving) },
-        { "Shared.ToolUsed", typeof(Messages.Shared.ToolUsed) },
-        { "Shared.FaceDirection", typeof(Messages.Shared.FaceDirection) },
-        { "Shared.SetHeldItem", typeof(Messages.Shared.SetHeldItem) },
-        { "Shared.ObjectAction", typeof(Messages.Shared.ObjectAction) },
-        { "Shared.SceneChanged", typeof(Messages.Shared.SceneChanged) },
-        { "Shared.ReplicateObject", typeof(Messages.Shared.ReplicateObject) },
-        { "Shared.SetRandomSeed", typeof(Messages.Shared.SetRandomSeed) },
-        { "Shared.TileMapAction", typeof(Messages.Shared.TileMapAction) },
+        { "Client.CreateGameObject", typeof(Messages.Client.CreateGameObject) },
+        { "Client.Position", typeof(Messages.Client.Position) },
+        { "Client.Movement", typeof(Messages.Client.Movement) },
+        { "Client.StoppedMoving", typeof(Messages.Client.StoppedMoving) },
+        { "Client.ToolUsed", typeof(Messages.Client.ToolUsed) },
+        { "Client.FaceDirection", typeof(Messages.Client.FaceDirection) },
+        { "Client.SetHeldItem", typeof(Messages.Client.SetHeldItem) },
+        { "Client.ObjectAction", typeof(Messages.Client.ObjectAction) },
+        { "Client.ObjectPositionedAction", typeof(Messages.Client.ObjectPositionedAction) },
+        { "Client.SceneChanged", typeof(Messages.Client.SceneChanged) },
+        { "Client.ReplicateObject", typeof(Messages.Client.ReplicateObject) },
+        { "Host.SetRandomSeed", typeof(Messages.Host.SetRandomSeed) },
+        { "Client.TileMapAction", typeof(Messages.Client.TileMapAction) },
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
     };
 
@@ -60,16 +61,17 @@ public class Plugin : BaseUnityPlugin
     public static HashSet<string> LocalSceneMessages = new HashSet<string>
     {
         "Server.CreatePlayer",
-        "Server.CreateGameObject",
-        "Shared.Position",
-        "Shared.Movement",
-        "Shared.StoppedMoving",
-        "Shared.ToolUsed",
-        "Shared.FaceDirection",
-        "Shared.SetHeldItem",
-        "Shared.ReplicateObject",
-        "Shared.ObjectAction",
-        "Shared.TileMapAction",
+        "Client.CreateGameObject",
+        "Client.Position",
+        "Client.Movement",
+        "Client.StoppedMoving",
+        "Client.ToolUsed",
+        "Client.FaceDirection",
+        "Client.SetHeldItem",
+        "Client.ReplicateObject",
+        "Client.ObjectAction",
+        "Client.ObjectPositionedAction",
+        "Client.TileMapAction",
     };
 
     private void Awake()
@@ -232,7 +234,7 @@ public class Plugin : BaseUnityPlugin
         if (IsHost) // TODO should client be able to request this? The game has reseed calls in a lot of strange places
         {
             UnityEngine.Random.State state = UnityEngine.Random.state;
-            server.SendMsgToAll(new Messages.Shared.SetRandomSeed {
+            server.SendMsgToAll(new Messages.Host.SetRandomSeed {
                 OwnerPeerId = serverPeerId,
                 RandomState = state
             });

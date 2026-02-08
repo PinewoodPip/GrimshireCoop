@@ -1,14 +1,12 @@
 
-using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
 using UnityEngine;
-using static Message;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Client;
 
 public class Position : NetObjectMessage
 {
-    public override string MessageType => "Shared.Position";
+    public override string MessageType => "Client.Position";
 
     public override Direction SyncDirection => Direction.ServerToClient;
 

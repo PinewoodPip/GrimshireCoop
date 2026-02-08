@@ -1,7 +1,5 @@
 
-using GrimshireCoop.Messages.Shared;
-using LiteNetLib;
-using LiteNetLib.Utils;
+using GrimshireCoop.Messages.Client;
 using UnityEngine;
 
 namespace GrimshireCoop;
@@ -57,7 +55,7 @@ public class DummyPlayer : NetworkedBehaviour
     public override void Sync()
     {
         Debug.Log($"DummyPlayer.Sync called for netId {netId} at position {transform.position}");
-        Position msg = new Position
+        Position msg = new ()
         {
             OwnerPeerId = peerId,
             NetId = netId,

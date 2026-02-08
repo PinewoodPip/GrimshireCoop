@@ -1,13 +1,12 @@
 
-using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
 using UnityEngine;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Client;
 
 public class Movement : NetObjectMessage
 {
-    public override string MessageType => "Shared.Movement";
+    public override string MessageType => "Client.Movement";
 
     public override Direction SyncDirection => Direction.ServerToClient;
 

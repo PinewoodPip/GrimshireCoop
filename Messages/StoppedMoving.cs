@@ -1,13 +1,11 @@
 
-using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
-using static Message;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Client;
 
 public class StoppedMoving : NetObjectMessage
 {
-    public override string MessageType => "Shared.StoppedMoving";
+    public override string MessageType => "Client.StoppedMoving";
 
     public override Direction SyncDirection => Direction.ServerToClient;
 

@@ -1,14 +1,12 @@
 
-using GrimshireCoop.Network;
-using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
 using UnityEngine;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Client;
 
 public class ReplicateObject : NetObjectMessage
 {
-    public override string MessageType => "Shared.ReplicateObject";
+    public override string MessageType => "Client.ReplicateObject";
 
     public override Direction SyncDirection => Direction.ClientToServer;
 

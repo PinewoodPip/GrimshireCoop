@@ -1,6 +1,8 @@
 
 using LiteNetLib.Utils;
 
+namespace GrimshireCoop.Messages;
+
 public abstract class Message
 {
     public enum Direction
@@ -9,7 +11,7 @@ public abstract class Message
         ClientToServer
     }
 
-    public abstract string MessageType { get; }
+    public abstract string MessageType { get; } // TODO build an index of these so we don't serialize strings with each message
     public abstract Direction SyncDirection { get; }
 
     public virtual void Serialize(NetDataWriter writer)

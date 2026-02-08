@@ -1,13 +1,11 @@
 
-using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
-using static Message;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Client;
 
 public class FaceDirection : NetObjectMessage
 {
-    public override string MessageType => "Shared.FaceDirection";
+    public override string MessageType => "Client.FaceDirection";
 
     public override Direction SyncDirection => Direction.ServerToClient;
 

@@ -1,7 +1,5 @@
 
-using GrimshireCoop.Messages.Shared;
-using LiteNetLib;
-using LiteNetLib.Utils;
+using GrimshireCoop.Messages.Client;
 using UnityEngine;
 
 namespace GrimshireCoop;

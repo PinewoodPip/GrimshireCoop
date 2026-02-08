@@ -3,13 +3,13 @@
 using LiteNetLib.Utils;
 using UnityEngine;
 
-namespace GrimshireCoop.Messages.Server;
+namespace GrimshireCoop.Messages.Client;
 
 public class CreateGameObject : Message
 {
-    public override string MessageType => "Server.CreateGameObject";
+    public override string MessageType => "Client.CreateGameObject";
 
-    public override Direction SyncDirection => Direction.ServerToClient;
+    public override Direction SyncDirection => Direction.ClientToServer;
 
     public string GameObjectId;
     public NetId NetId;

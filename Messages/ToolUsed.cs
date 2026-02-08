@@ -1,12 +1,14 @@
 
-using GrimshireCoop.Network.Messages;
 using LiteNetLib.Utils;
-using static Message;
 
-namespace GrimshireCoop.Messages.Shared;
+namespace GrimshireCoop.Messages.Client;
 
 public class ToolUsed : NetObjectMessage
 {
+    public override string MessageType => "Client.ToolUsed";
+
+    public override Direction SyncDirection => Direction.ServerToClient;
+
     public enum ToolType : byte
     {
         Axe,
@@ -18,10 +20,6 @@ public class ToolUsed : NetObjectMessage
         // Milker, // No animation in the game
         // Shears, // TODO requires extra checks (doesn't use state machine)
     }
-
-    public override string MessageType => "Shared.ToolUsed";
-
-    public override Direction SyncDirection => Direction.ServerToClient;
 
     public ToolType ToolId;
 

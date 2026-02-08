@@ -1,5 +1,5 @@
 
-namespace GrimshireCoop.Network.Messages;
+namespace GrimshireCoop.Messages;
 
 public abstract class OwnedMessage : Message
 {
