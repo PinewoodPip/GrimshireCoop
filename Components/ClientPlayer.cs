@@ -217,6 +217,12 @@ public class ClientPlayer : NetworkedBehaviour
         base.Sync();
     }
 
+    public static ClientPlayer Instantiate()
+    {
+        PlayerController clientPlayer = GameManager.Instance.Player;
+        return clientPlayer.gameObject.AddComponent<ClientPlayer>();
+    }
+
     public void OnDestroy()
     {
         Debug.Log("ClientPlayer destroyed");

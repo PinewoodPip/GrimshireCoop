@@ -140,7 +140,6 @@ public class PeerPlayer : NetworkedBehaviour
     // Send position to all connected peers
     public override void Sync()
     {
-        Debug.Log($"PeerPlayer.Sync called for netId {netId} at position {transform.position}");
         Movement msg = new()
         {
             OwnerPeerId = peerId,
@@ -151,5 +150,25 @@ public class PeerPlayer : NetworkedBehaviour
         SendMsg(msg);
 
         base.Sync();
+    }
+
+    public static PeerPlayer Instantiate()
+    {
+        PlayerController clientPlayer = GameManager.Instance.Player;
+        GameObject peerPlayerObj = new GameObject("Coop.NetPeerPlayer");
+
+        // Copy the player animator setup
+        GameObject playerSprite = clientPlayer.transform.Find("PlayerSprite").gameObject;
+        GameObject peerPlayerSprite = GameObject.Instantiate(playerSprite, peerPlayerObj.transform);
+        peerPlayerSprite.transform.parent = peerPlayerObj.transform;
+        peerPlayerSprite.name = "PlayerSprite";
+
+        // Copy placement blocker trigger (so the peer will block placing objects at its location)
+        GameObject playerPlacementDetection = clientPlayer.transform.Find("PlayerPlacementDetection").gameObject;
+        GameObject peerPlayerPlacementDetection = GameObject.Instantiate(playerPlacementDetection, peerPlayerObj.transform);
+        peerPlayerPlacementDetection.transform.parent = peerPlayerObj.transform;
+        peerPlayerPlacementDetection.name = "PlayerPlacementDetection";
+
+        return peerPlayerObj.AddComponent<PeerPlayer>();
     }
 }

@@ -1,6 +1,8 @@
 
 using GrimshireCoop.Messages.Client;
 using LiteNetLib.Utils;
+using UnityEngine;
+using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop.Components;
 
@@ -105,5 +107,13 @@ public class TreeObject : NetworkedBehaviour
         }
 
         return data;
+    }
+
+    public static TreeObject Instantiate()
+    {
+        PersistentTreeManager treeManager = GameObject.FindObjectOfType<PersistentTreeManager>(); // TODO cache all these singletons that the game does not
+        GameObject prefab = GetField<GameObject>(treeManager, "treeObjPrefab");
+        GameObject instance = GameObject.Instantiate(prefab);
+        return instance.AddComponent<TreeObject>();
     }
 }

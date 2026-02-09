@@ -2,6 +2,7 @@
 using GrimshireCoop.Messages.Client;
 using LiteNetLib.Utils;
 using Newtonsoft.Json;
+using UnityEngine;
 using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop.Components;
@@ -95,5 +96,13 @@ public class NetCropObject : NetworkedBehaviour
         data.subPlantsList = JsonConvert.DeserializeObject<float[,]>(data.serializedSubPlantData);
 
         return data;
+    }
+
+    public static NetCropObject Instantiate()
+    {
+        CropManager cropManager = GameManager.Instance.CropManager;
+        GameObject cropPrefab = GetField<GameObject>(cropManager, "cropObjPrefab");
+        GameObject cropInstance = GameObject.Instantiate(cropPrefab);
+        return cropInstance.AddComponent<NetCropObject>();
     }
 }

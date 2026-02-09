@@ -32,6 +32,7 @@ public class Client
 
     private NetManager netManager;
     private Dictionary<Type, Action<Client, Message>> messageHandlers = [];
+    private Dictionary<string, Func<int, NetworkedBehaviour>> netObjectCreators = [];
 
     public Client()
     {
@@ -41,11 +42,12 @@ public class Client
         }
         Instance = this;
 
-        // Register default message handlers
+        // Register message handlers & net object factory methods
         RegisterSystemMessageHandlers();
         GameObjectHandlers.RegisterHandlers(this);
         PlayerHandlers.RegisterHandlers(this);
         GameManagerHandlers.RegisterHandlers(this);
+        RegisterNetObjectCreators();
     }
 
     public void PollEvents()
@@ -107,54 +109,18 @@ public class Client
         };
     }
     
-    private NetworkedBehaviour CreateGameObjectByType(string gameObjectId, int ownerPeerId)
+    private NetworkedBehaviour CreateGameObjectByType(string gameObjectId, PeerId ownerPeerId)
     {
-        Log($"Creating networked GameObject {gameObjectId}");
-        switch (gameObjectId)
+        NetworkedBehaviour netObj = null;
+        if (netObjectCreators.TryGetValue(gameObjectId, out var creator))
         {
-            case "PeerPlayer":
-                if (ownerPeerId == ClientPeerId)
-                {
-                    // Wrap the local PlayerController with the ClientPlayer component
-                    PlayerController clientPlayer = GameManager.Instance.Player;
-                    ClientPlayer clientPlayerNetObj = clientPlayer.gameObject.AddComponent<ClientPlayer>();
-                    return clientPlayerNetObj;
-                }
-                else
-                {
-                    // Create a PeerPlayer for other peers
-                    PlayerController clientPlayer = GameManager.Instance.Player;
-                    GameObject peerPlayerObj = new GameObject("Coop.NetPeerPlayer");
-
-                    GameObject playerSprite = clientPlayer.transform.Find("PlayerSprite").gameObject;
-                    GameObject peerPlayerSprite = GameObject.Instantiate(playerSprite, peerPlayerObj.transform);
-                    peerPlayerSprite.transform.parent = peerPlayerObj.transform;
-                    peerPlayerSprite.name = "PlayerSprite";
-
-                    GameObject playerPlacementDetection = clientPlayer.transform.Find("PlayerPlacementDetection").gameObject;
-                    GameObject peerPlayerPlacementDetection = GameObject.Instantiate(playerPlacementDetection, peerPlayerObj.transform);
-                    peerPlayerPlacementDetection.transform.parent = peerPlayerObj.transform;
-                    peerPlayerPlacementDetection.name = "PlayerPlacementDetection";
-
-                    // TODO set skin
-
-                    return peerPlayerObj.AddComponent<PeerPlayer>();
-                }
-            case "TreeObject":
-                // TODO track in TreeManager
-                PersistentTreeManager treeManager = GameObject.FindObjectOfType<PersistentTreeManager>();
-                GameObject prefab = GetField<GameObject>(treeManager, "treeObjPrefab");
-                var instance = GameObject.Instantiate(prefab);
-                return instance.AddComponent<Components.TreeObject>();
-            case "CropObject":
-                CropManager cropManager = GameManager.Instance.CropManager;
-                GameObject cropPrefab = GetField<GameObject>(cropManager, "cropObjPrefab");
-                var cropInstance = GameObject.Instantiate(cropPrefab);
-                return cropInstance.AddComponent<Components.NetCropObject>();
-            default:
-                LogWarning($"Unknown GameObjectId to create: {gameObjectId}");
-                return null;
+            netObj = creator(ownerPeerId);
         }
+        else
+        {
+            LogWarning($"Unknown GameObjectId to create: {gameObjectId}; register a creator method for it with RegisterNetObjectCreator()");
+        }
+        return netObj;
     }
 
     /// <summary>
@@ -163,6 +129,25 @@ public class Client
     public void RegisterMessageHandler<T>(Action<Client, T> handler) where T : Message
     {
         messageHandlers[typeof(T)] = (client, msg) => handler(client, (T)msg); // Extra delegate is used just to avoid verbosity from explicit casts, overhead is minimal
+    }
+
+    /// <summary>
+    /// Registers a factory method for instantiating a NetworkedBehaviour.
+    /// </summary>
+    /// <param name="creator">First param is owner peer ID.</param>
+    public void RegisterNetObjectCreator(string gameObjectId, Func<PeerId, NetworkedBehaviour> creator)
+    {
+        netObjectCreators[gameObjectId] = creator;
+    }
+
+    private void RegisterNetObjectCreators()
+    {
+        // Players are a special case: the client must create a ClientPlayer to wrap its PlayerController singleton, while other peers are represented by PeerPlayer.
+        RegisterNetObjectCreator("PeerPlayer", ownerPeerId => {
+            return ownerPeerId == ClientPeerId ? ClientPlayer.Instantiate() : PeerPlayer.Instantiate();
+        });
+        RegisterNetObjectCreator("TreeObject", ownerPeerId => Components.TreeObject.Instantiate());
+        RegisterNetObjectCreator("CropObject", ownerPeerId => Components.NetCropObject.Instantiate());
     }
 
     private void RegisterSystemMessageHandlers()
