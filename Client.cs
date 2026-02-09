@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using BepInEx.Logging;
 using GrimshireCoop.Messages;
 using GrimshireCoop.Messages.Client;
+using GrimshireCoop.Messages.Server;
+using GrimshireCoop.Messages.Host;
+using GrimshireCoop.MessageHandlers;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
@@ -12,6 +15,9 @@ using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop;
 
+/// <summary>
+/// Client singleton; handles net messages to act on the networked game objects.
+/// </summary>
 public class Client
 {
     public static string CurrentSceneID => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
@@ -25,6 +31,7 @@ public class Client
     private static readonly ManualLogSource Logger = Plugin.Logger;
 
     private NetManager netManager;
+    private Dictionary<Type, Action<Client, Message>> messageHandlers = [];
 
     public Client()
     {
@@ -33,6 +40,12 @@ public class Client
             throw new System.Exception("Client instance already exists");
         }
         Instance = this;
+
+        // Register default message handlers
+        RegisterSystemMessageHandlers();
+        GameObjectHandlers.RegisterHandlers(this);
+        PlayerHandlers.RegisterHandlers(this);
+        GameManagerHandlers.RegisterHandlers(this);
     }
 
     public void PollEvents()
@@ -80,142 +93,14 @@ public class Client
                 netObj = GetByNetID(netObjectMsg.NetId);
             }
 
-            switch (msg)
+            // Handle the message
+            if (messageHandlers.TryGetValue(msg.GetType(), out var handler))
             {
-                case Messages.Server.AssignPeerId assignPeerIdMsg:
-                    ClientPeerId = assignPeerIdMsg.PeerId;
-                    Log($"Assigned Client Peer ID: {ClientPeerId}");
-                    foreach (var kvp in assignPeerIdMsg.PeerScenes)
-                    {
-                        PeerScenes[kvp.Key] = kvp.Value;
-                        Log($"Peer {kvp.Key} is in scene {kvp.Value}");
-                    }
-                    break;
-                case Messages.Server.CreatePlayer createPlayerMsg:
-                    break;
-                case Messages.Client.ReplicateObject replicateObjectMsg:
-                    // Only replicate if the message is for this client
-                    int targetPeerId = replicateObjectMsg.TargetPeerId;
-                    if (targetPeerId != -1 && targetPeerId != ClientPeerId)
-                    {
-                        Log($"Ignoring ReplicateObject message for peer {replicateObjectMsg.TargetPeerId} (current peer {ClientPeerId})");
-                        break;
-                    }
-                    Log($"[Client] Replicating object netId {replicateObjectMsg.NetId} of type {replicateObjectMsg.GameObjectId} from peer {replicateObjectMsg.OwnerPeerId}");
-                    NetworkedBehaviour replicatedObj = CreateNetworkedObject(new CreateGameObject
-                    {
-                        GameObjectId = replicateObjectMsg.GameObjectId,
-                        NetId = replicateObjectMsg.NetId,
-                        OwnerPeerId = replicateObjectMsg.OwnerPeerId,
-                        Position = replicateObjectMsg.Position
-                    });
-                    replicatedObj.ApplyReplicationData(replicateObjectMsg.ReplicationData);
-                    break;
-                case Messages.Client.CreateGameObject createGameObjectMsg:
-                    CreateNetworkedObject(createGameObjectMsg);
-                    break;
-                case Messages.Client.Position positionMsg:
-                    netObj.transform.position = positionMsg.Pos;
-                    break;
-                case Messages.Client.Movement movementMsg:
-                    // Animate - should be done before setting pos so the facing dir vector is correct
-                    if (netObj is PeerPlayer peerPlayer)
-                    {
-                        peerPlayer.AnimateWalkTowards(new Vector2(movementMsg.NewPosition.x, movementMsg.NewPosition.y));
-                    }
-
-                    netObj.transform.position = movementMsg.NewPosition;
-                    break;
-                case Messages.Client.StoppedMoving stoppedMovingMsg:
-                    if (netObj is PeerPlayer stoppedPeerPlayer)
-                    {
-                        stoppedPeerPlayer.OnStoppedMoving();
-                    }
-                    break;
-                case Messages.Client.ToolUsed toolUsedMsg:
-                    if (netObj is PeerPlayer toolUserPeerPlayer)
-                    {
-                        toolUserPeerPlayer.PlayToolUseAnimation(toolUsedMsg.ToolId);
-                    }
-                    break;
-                case Messages.Client.FaceDirection faceDirectionMsg:
-                    Debug.Log($"FaceDirection message received for netId {faceDirectionMsg.NetId} dirX {faceDirectionMsg.PosX} dirY {faceDirectionMsg.PosY}");
-                    if (netObj is PeerPlayer facingPeerPlayer)
-                    {
-                        facingPeerPlayer.FaceTowards(new Vector2(faceDirectionMsg.PosX, faceDirectionMsg.PosY));
-                    }
-                    break;
-                case Messages.Client.SetHeldItem setHeldItemMsg:
-                    PeerPlayer heldItemPeerPlayer = netObj as PeerPlayer;
-                    heldItemPeerPlayer.SetHeldItem(setHeldItemMsg.ItemId);
-                    break;
-                case Messages.Client.ObjectAction objectActionMsg: // Will handle derived msgs as well.
-                    netObj.OnAction(objectActionMsg);
-                    break;
-                case Messages.Host.SetRandomSeed setRandomSeedMsg:
-                    UnityEngine.Random.state = setRandomSeedMsg.RandomState;
-                    break;
-                case Messages.Client.TileMapAction tileMapActionMsg:
-                    NetTileMapManager.HandleTileMapAction(tileMapActionMsg);
-                    break;
-                case Messages.Client.SceneChanged sceneChangedMsg:
-                {
-                    // Delete previous PeerPlayer
-                    PeerPlayer[] allPeers = GameObject.FindObjectsOfType<PeerPlayer>();
-                    foreach (var peer in allPeers)
-                    {
-                        if (peer.peerId == sceneChangedMsg.OwnerPeerId)
-                        {
-                            Plugin.UnregisterNetObject(peer, SceneManager.GetActiveScene().name);
-                            GameObject.DestroyImmediate(peer.gameObject); // TODO extract method
-                        }
-                    }
-
-                    // Recreate peer player if they moved to client's scene
-                    if (sceneChangedMsg.SceneId == CurrentSceneID)
-                    {
-                        CreateNetworkedObject(new CreateGameObject
-                        {
-                            GameObjectId = "PeerPlayer",
-                            NetId = sceneChangedMsg.ClientPlayerNetId,
-                            OwnerPeerId = sceneChangedMsg.OwnerPeerId,
-                            Position = sceneChangedMsg.Position
-                        });
-                    }
-
-                    int peerId = sceneChangedMsg.OwnerPeerId;
-                    PeerScenes[peerId] = sceneChangedMsg.SceneId;
-                    Log($"Peer {peerId} changed to scene {sceneChangedMsg.SceneId}");
-
-                    // Replicate owned objects to the peer
-                    if (sceneChangedMsg.SceneId == CurrentSceneID)
-                    {
-                        foreach (var ownedObj in Plugin.GetOwnedSceneObjects())
-                        {
-                            // Send create game object message
-                            string objectTypeID = ownedObj.NetTypeID == "ClientPlayer" ? "PeerPlayer" : ownedObj.NetTypeID;
-                            ReplicateObject replicateMsg = new() // TODO special type of message
-                            {
-                                OwnerPeerId = ownedObj.peerId,
-                                NetId = ownedObj.netId,
-                                GameObjectId = objectTypeID,
-                                Position = ownedObj.transform.position,
-                                SceneId = CurrentSceneID,
-                                TargetPeerId = peerId,
-                                ReplicationData = ownedObj.GetReplicationData()
-                            };
-                            Log($"SceneChanged: Replicating object netId {ownedObj.netId} of type {objectTypeID} to peer {peerId} scene {CurrentSceneID}");
-
-                            NetDataWriter writer = new NetDataWriter();
-                            replicateMsg.Serialize(writer);
-                            fromPeer.Send(writer, DeliveryMethod.ReliableOrdered);
-                        }
-                    }
-                    break;
-                }
-                default:
-                    LogWarning($"Unknown message type received: {msgType}");
-                    break;
+                handler(this, msg);
+            }
+            else
+            {
+                LogWarning($"Unknown message type received: {msgType}");
             }
 
             dataReader.Recycle();
@@ -269,6 +154,110 @@ public class Client
             default:
                 LogWarning($"Unknown GameObjectId to create: {gameObjectId}");
                 return null;
+        }
+    }
+
+    /// <summary>
+    /// Registers a handler that will be invoked when receiving a net message of the *exact* given message type (will not fire for base/derived net msgs).
+    /// </summary>
+    public void RegisterMessageHandler<T>(Action<Client, T> handler) where T : Message
+    {
+        messageHandlers[typeof(T)] = (client, msg) => handler(client, (T)msg); // Extra delegate is used just to avoid verbosity from explicit casts, overhead is minimal
+    }
+
+    private void RegisterSystemMessageHandlers()
+    {
+        // client param can be ignored here since it will always refer to `this`
+        RegisterMessageHandler<AssignPeerId>((client, msg) => HandleAssignPeerIdMsg(msg));
+        RegisterMessageHandler<ReplicateObject>((client, msg) => HandleReplicateObjectMsg(msg));
+        RegisterMessageHandler<CreateGameObject>((client, msg) => HandleCreateGameObjectMsg(msg));
+        RegisterMessageHandler<SetRandomSeed>((client, msg) => HandleSetRandomSeedMsg(msg));
+        RegisterMessageHandler<SceneChanged>((client, msg) => HandleSceneChangedMsg(msg));
+    }
+
+    private void HandleAssignPeerIdMsg(AssignPeerId msg)
+    {
+        ClientPeerId = msg.PeerId;
+        Log($"Assigned Client Peer ID: {ClientPeerId}");
+    }
+
+    private void HandleReplicateObjectMsg(ReplicateObject msg)
+    {
+        int targetPeerId = msg.TargetPeerId;
+        if (targetPeerId != -1 && targetPeerId != ClientPeerId)
+        {
+            Log($"Ignoring ReplicateObject message for peer {msg.TargetPeerId} (current peer {ClientPeerId})");
+            return;
+        }
+        Log($"Replicating object netId {msg.NetId} of type {msg.GameObjectId} from peer {msg.OwnerPeerId}");
+        NetworkedBehaviour replicatedObj = CreateNetworkedObject(new CreateGameObject
+        {
+            GameObjectId = msg.GameObjectId,
+            NetId = msg.NetId,
+            OwnerPeerId = msg.OwnerPeerId,
+            Position = msg.Position
+        });
+        replicatedObj.ApplyReplicationData(msg.ReplicationData);
+    }
+
+    private void HandleCreateGameObjectMsg(CreateGameObject msg)
+    {
+        CreateNetworkedObject(msg);
+    }
+
+    private void HandleSetRandomSeedMsg(SetRandomSeed msg)
+    {
+        UnityEngine.Random.state = msg.RandomState;
+    }
+
+    private void HandleSceneChangedMsg(SceneChanged msg)
+    {
+        PeerPlayer[] allPeers = GameObject.FindObjectsOfType<PeerPlayer>();
+        foreach (var peer in allPeers)
+        {
+            if (peer.peerId == msg.OwnerPeerId)
+            {
+                Plugin.UnregisterNetObject(peer, SceneManager.GetActiveScene().name);
+                GameObject.DestroyImmediate(peer.gameObject);
+            }
+        }
+
+        if (msg.SceneId == CurrentSceneID)
+        {
+            CreateNetworkedObject(new CreateGameObject
+            {
+                GameObjectId = "PeerPlayer",
+                NetId = msg.ClientPlayerNetId,
+                OwnerPeerId = msg.OwnerPeerId,
+                Position = msg.Position
+            });
+        }
+
+        int peerId = msg.OwnerPeerId;
+        PeerScenes[peerId] = msg.SceneId;
+        Log($"Peer {peerId} changed to scene {msg.SceneId}");
+
+        if (msg.SceneId == CurrentSceneID)
+        {
+            foreach (var ownedObj in Plugin.GetOwnedSceneObjects())
+            {
+                string objectTypeID = ownedObj.NetTypeID == "ClientPlayer" ? "PeerPlayer" : ownedObj.NetTypeID;
+                ReplicateObject replicateMsg = new()
+                {
+                    OwnerPeerId = ownedObj.peerId,
+                    NetId = ownedObj.netId,
+                    GameObjectId = objectTypeID,
+                    Position = ownedObj.transform.position,
+                    SceneId = CurrentSceneID,
+                    TargetPeerId = peerId,
+                    ReplicationData = ownedObj.GetReplicationData()
+                };
+                Log($"SceneChanged: Replicating object netId {ownedObj.netId} of type {objectTypeID} to peer {peerId} scene {CurrentSceneID}");
+
+                NetDataWriter writer = new NetDataWriter();
+                replicateMsg.Serialize(writer);
+                ServerPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+            }
         }
     }
 
