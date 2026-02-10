@@ -35,4 +35,13 @@ public class CreateGameObject : Message
         OwnerPeerId = reader.GetInt();
         Position = reader.GetVector3();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        GameObjectId = string.Empty;
+        NetId = default;
+        OwnerPeerId = default;
+        Position = default;
+    }
 }

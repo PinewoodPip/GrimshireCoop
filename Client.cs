@@ -227,21 +227,20 @@ public class Client
             foreach (var ownedObj in Plugin.GetOwnedSceneObjects())
             {
                 string objectTypeID = ownedObj.NetTypeID == "ClientPlayer" ? "PeerPlayer" : ownedObj.NetTypeID;
-                ReplicateObject replicateMsg = new()
-                {
-                    OwnerPeerId = ownedObj.peerId,
-                    NetId = ownedObj.netId,
-                    GameObjectId = objectTypeID,
-                    Position = ownedObj.transform.position,
-                    SceneId = CurrentSceneID,
-                    TargetPeerId = peerId,
-                    ReplicationData = ownedObj.GetReplicationData()
-                };
+                ReplicateObject replicateMsg = NetMessagePool.Get<ReplicateObject>();
+                replicateMsg.OwnerPeerId = ownedObj.peerId;
+                replicateMsg.NetId = ownedObj.netId;
+                replicateMsg.GameObjectId = objectTypeID;
+                replicateMsg.Position = ownedObj.transform.position;
+                replicateMsg.SceneId = CurrentSceneID;
+                replicateMsg.TargetPeerId = peerId;
+                replicateMsg.ReplicationData = ownedObj.GetReplicationData();
                 Log($"SceneChanged: Replicating object netId {ownedObj.netId} of type {objectTypeID} to peer {peerId} scene {CurrentSceneID}");
 
                 NetDataWriter writer = new NetDataWriter();
                 replicateMsg.Serialize(writer);
                 ServerPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+                NetMessagePool.Release(replicateMsg);
             }
         }
     }
@@ -270,16 +269,15 @@ public class Client
     public static T CreateNetObject<T>(GameObject originalObj) where T : NetworkedBehaviour
     {
         T netObj = WrapNetObject(originalObj.AddComponent<T>(), Client.Instance.ClientPeerId, Plugin.NextFreeNetId) as T; // TODO have this consume the next free netId from the plugin
-        ReplicateObject msg = new()
-        {
-            OwnerPeerId = netObj.peerId,
-            NetId = netObj.netId,
-            GameObjectId = netObj.NetTypeID,
-            Position = originalObj.transform.position,
-            SceneId = Client.CurrentSceneID,
-            TargetPeerId = -1,
-            ReplicationData = netObj.GetReplicationData(),
-        };
+        ReplicateObject msg = NetMessagePool.Get<ReplicateObject>();
+        msg.GameObjectId = netObj.NetTypeID;
+        msg.OwnerPeerId = netObj.peerId;
+        msg.NetId = netObj.netId;
+        msg.GameObjectId = netObj.NetTypeID;
+        msg.Position = originalObj.transform.position;
+        msg.SceneId = CurrentSceneID;
+        msg.TargetPeerId = -1;
+        msg.ReplicationData = netObj.GetReplicationData();
         SendMsg(msg);
         return netObj;
     }

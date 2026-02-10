@@ -36,12 +36,10 @@ public static class TreeManager
         Components.TreeObject netObj = __instance.GetComponent<Components.TreeObject>();
         if (netObj)
         {
-            ObjectAction action = new()
-            {
-                OwnerPeerId = Plugin.client.ClientPeerId,
-                NetId = netObj.netId,
-                Action = "UseAxe"
-            };
+            ObjectAction action = NetMessagePool.Get<ObjectAction>();
+            action.OwnerPeerId = Plugin.client.ClientPeerId;
+            action.NetId = netObj.netId;
+            action.Action = "UseAxe";
             netObj.SendMsg(action);
         }
     }

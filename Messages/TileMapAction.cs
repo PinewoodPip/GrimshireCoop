@@ -37,4 +37,11 @@ public class TileMapAction : OwnedMessage
         Position = reader.GetVector3();
         Action = (ActionType)reader.GetByte();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        Position = default;
+        Action = default;
+    }
 }

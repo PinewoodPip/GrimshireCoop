@@ -18,4 +18,10 @@ public abstract class NetObjectMessage : OwnedMessage
         base.Deserialize(reader);
         NetId = reader.GetInt();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        NetId = default;
+    }
 }

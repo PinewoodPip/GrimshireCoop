@@ -33,4 +33,12 @@ public class SceneChanged : OwnedMessage
         ClientPlayerNetId = reader.GetInt();
         Position = reader.GetVector3();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        SceneId = "";
+        ClientPlayerNetId = default;
+        Position = default;
+    }
 }

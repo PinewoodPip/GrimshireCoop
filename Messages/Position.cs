@@ -27,4 +27,10 @@ public class Position : NetObjectMessage
         base.Deserialize(reader);
         Pos = reader.GetVector3();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        Pos = default;
+    }
 }

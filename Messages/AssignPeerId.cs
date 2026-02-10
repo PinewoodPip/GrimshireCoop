@@ -33,4 +33,11 @@ public class AssignPeerId : Message
         PeerId = reader.GetInt();
         PeerScenes = reader.GetDict();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        PeerId = default;
+        PeerScenes.Clear();
+    }
 }

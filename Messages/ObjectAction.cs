@@ -26,4 +26,10 @@ public class ObjectAction : NetObjectMessage
         base.Deserialize(reader);
         Action = reader.GetString();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        Action = "";
+    }
 }

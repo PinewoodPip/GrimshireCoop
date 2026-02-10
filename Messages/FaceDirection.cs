@@ -30,4 +30,11 @@ public class FaceDirection : NetObjectMessage
         PosX = reader.GetFloat();
         PosY = reader.GetFloat();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        PosX = default;
+        PosY = default;
+    }
 }

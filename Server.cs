@@ -109,12 +109,17 @@ public class Server : INetEventListener
         }
     }
 
+    /// <summary>
+    /// Sends a message to all connected peers.
+    /// **The message will be freed to the pool afterwards**.
+    /// </summary>
     public void SendMsgToAll(Message msg)
     {
         writer.Reset();
         msg.Serialize(writer);
         netManager.SendToAll(writer, DeliveryMethod.ReliableOrdered);
         LogServer($"Sent message {msg.MessageType} to all peers");
+        NetMessagePool.Release(msg);
     }
 
     public void ForwardMsg(OwnedMessage msg)

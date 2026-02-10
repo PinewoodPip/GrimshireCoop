@@ -57,13 +57,11 @@ public class ClientPlayer : NetworkedBehaviour
         // oldScene.name is null? WTF? TODO
         // Send scene change message
         Plugin.ChangeNetObjectScene(this, oldSceneName, newScene.name);
-        SceneChanged msg = new()
-        {
-            OwnerPeerId = peerId,
-            SceneId = newScene.name,
-            ClientPlayerNetId = Client.ClientPlayerNetId,
-            Position = player.transform.position
-        };
+        SceneChanged msg = NetMessagePool.Get<SceneChanged>();
+        msg.OwnerPeerId = peerId;
+        msg.SceneId = newScene.name;
+        msg.ClientPlayerNetId = Client.ClientPlayerNetId;
+        msg.Position = player.transform.position;
         SendMsg(msg);
         CurrentSceneName = newScene.name;
     }
@@ -91,11 +89,9 @@ public class ClientPlayer : NetworkedBehaviour
         else if (clientPlayer.WasMoving)
         {
             // Report stopped moving
-            StoppedMoving msg = new()
-            {
-                OwnerPeerId = clientPlayer.peerId,
-                NetId = clientPlayer.netId
-            };
+            StoppedMoving msg = NetMessagePool.Get<StoppedMoving>();
+            msg.OwnerPeerId = clientPlayer.peerId;
+            msg.NetId = clientPlayer.netId;
             clientPlayer.SendMsg(msg);
             clientPlayer.WasMoving = false;
         }
@@ -110,13 +106,11 @@ public class ClientPlayer : NetworkedBehaviour
         if (clientPlayer != null)
         {
             Vector2 facingDir = __instance.GetInteractPosition();
-            FaceDirection msg = new()
-            {
-                OwnerPeerId = clientPlayer.peerId,
-                NetId = clientPlayer.netId,
-                PosX = facingDir.x,
-                PosY = facingDir.y
-            };
+            FaceDirection msg = NetMessagePool.Get<FaceDirection>();
+            msg.OwnerPeerId = clientPlayer.peerId;
+            msg.NetId = clientPlayer.netId;
+            msg.PosX = facingDir.x;
+            msg.PosY = facingDir.y;
             clientPlayer.SendMsg(msg);
         }
     }
@@ -164,12 +158,10 @@ public class ClientPlayer : NetworkedBehaviour
         ClientPlayer clientPlayer = playerController.GetComponent<ClientPlayer>();
         if (clientPlayer)
         {
-            ToolUsed msg = new()
-            {
-                OwnerPeerId = clientPlayer.peerId,
-                NetId = clientPlayer.netId,
-                ToolId = toolId,
-            };
+            ToolUsed msg = NetMessagePool.Get<ToolUsed>();
+            msg.OwnerPeerId = clientPlayer.peerId;
+            msg.NetId = clientPlayer.netId;
+            msg.ToolId = toolId;
             clientPlayer.SendMsg(msg);
         }
     }
@@ -183,12 +175,10 @@ public class ClientPlayer : NetworkedBehaviour
         if (clientPlayer)
         {
             int itemId = holdingItem ? __instance.GetHeldItemRef().ID : -1;
-            SetHeldItem msg = new()
-            {
-                OwnerPeerId = clientPlayer.peerId,
-                NetId = clientPlayer.netId,
-                ItemId = itemId
-            };
+            SetHeldItem msg = NetMessagePool.Get<SetHeldItem>();
+            msg.OwnerPeerId = clientPlayer.peerId;
+            msg.NetId = clientPlayer.netId;
+            msg.ItemId = itemId;
             clientPlayer.SendMsg(msg);
         }
     }
@@ -205,13 +195,11 @@ public class ClientPlayer : NetworkedBehaviour
         // ATM the type of the game object is desynched between
         // peers, ie. for the local player it's a ClientPlayer
         // but for other peers it's a PeerPlayer.
-        Movement msg = new()
-        {
-            OwnerPeerId = peerId,
-            NetId = netId,
-            OldPosition = OldPosition,
-            NewPosition = transform.position
-        };
+        Movement msg = NetMessagePool.Get<Movement>();
+        msg.OwnerPeerId = peerId;
+        msg.NetId = netId;
+        msg.OldPosition = OldPosition;
+        msg.NewPosition = transform.position;
         SendMsg(msg);
 
         base.Sync();

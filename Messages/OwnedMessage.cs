@@ -24,4 +24,10 @@ public abstract class OwnedMessage : Message
     {
         OwnerPeerId = reader.GetInt();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        OwnerPeerId = default;
+    }
 }

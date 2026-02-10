@@ -25,4 +25,13 @@ public abstract class Message
     }
 
     public abstract void Deserialize(NetDataReader reader);
+
+    /// <summary>
+    /// Resets the message's fields to their default values.
+    /// Intended to be used with pooling patterns.
+    /// </summary>
+    public virtual void Reset()
+    {
+        
+    }
 }

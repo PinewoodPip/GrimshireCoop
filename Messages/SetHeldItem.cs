@@ -26,4 +26,10 @@ public class SetHeldItem : NetObjectMessage
         base.Deserialize(reader);
         ItemId = reader.GetInt();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        ItemId = default;
+    }
 }

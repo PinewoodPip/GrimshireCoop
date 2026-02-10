@@ -38,4 +38,10 @@ public class ToolUsed : NetObjectMessage
         base.Deserialize(reader);
         ToolId = (ToolType)reader.GetByte();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        ToolId = default;
+    }
 }

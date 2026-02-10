@@ -30,4 +30,11 @@ public class Movement : NetObjectMessage
         OldPosition = reader.GetVector3();
         NewPosition = reader.GetVector3();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        OldPosition = default;
+        NewPosition = default;
+    }
 }

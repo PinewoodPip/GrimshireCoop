@@ -27,4 +27,10 @@ public class SetRandomSeed : OwnedMessage
         base.Deserialize(reader);
         RandomState = reader.GetRandomState();
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        RandomState = default;
+    }
 }

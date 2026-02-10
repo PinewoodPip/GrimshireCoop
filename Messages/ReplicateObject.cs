@@ -42,4 +42,14 @@ public class ReplicateObject : NetObjectMessage
         ReplicationData = new byte[replicationDataLength];
         reader.GetBytes(ReplicationData, replicationDataLength);
     }
+
+    public override void Reset()
+    {
+        base.Reset();
+        GameObjectId = "";
+        Position = default;
+        SceneId = "";
+        TargetPeerId = default;
+        ReplicationData = [];
+    }
 }

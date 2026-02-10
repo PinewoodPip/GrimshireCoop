@@ -38,9 +38,8 @@ public class Plugin : BaseUnityPlugin
     // Maps peers to the scene they are in.
     public static Dictionary<PeerId, string> PeerScenes = [];
 
-    public static Dictionary<string, Type> MessageTypes = new Dictionary<string, Type>
+    public static Dictionary<string, Type> MessageTypes = new()
     {
-        { "Server.CreatePlayer", typeof(Messages.Server.CreatePlayer) },
         { "Client.CreateGameObject", typeof(Messages.Client.CreateGameObject) },
         { "Client.Position", typeof(Messages.Client.Position) },
         { "Client.Movement", typeof(Messages.Client.Movement) },
@@ -223,10 +222,10 @@ public class Plugin : BaseUnityPlugin
         if (IsHost) // TODO should client be able to request this? The game has reseed calls in a lot of strange places
         {
             UnityEngine.Random.State state = UnityEngine.Random.state;
-            server.SendMsgToAll(new Messages.Host.SetRandomSeed {
-                OwnerPeerId = serverPeerId,
-                RandomState = state
-            });
+            GrimshireCoop.Messages.Host.SetRandomSeed msg = NetMessagePool.Get<Messages.Host.SetRandomSeed>();
+            msg.OwnerPeerId = serverPeerId;
+            msg.RandomState = state;
+            server.SendMsgToAll(msg);
         }
     }
 }

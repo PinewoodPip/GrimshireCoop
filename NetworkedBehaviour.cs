@@ -38,6 +38,10 @@ public abstract class NetworkedBehaviour : MonoBehaviour
         NetworkUpdate();
     }
 
+    /// <summary>
+    /// Sends a message to the server.
+    /// **The message will be freed to the pool afterwards**.
+    /// </summary>
     public void SendMsg(Message msg)
     {
         // Not a very useful check, since we want to allow clients to interact with non-owned objects as well
@@ -46,6 +50,7 @@ public abstract class NetworkedBehaviour : MonoBehaviour
         NetDataWriter writer = new NetDataWriter();
         msg.Serialize(writer);
         Client.ServerPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+        NetMessagePool.Release(msg);
     }
 
     public virtual void NetworkUpdate() { }
@@ -57,12 +62,10 @@ public abstract class NetworkedBehaviour : MonoBehaviour
 
     public void SendActionMsg(string actionID)
     {
-        ObjectAction action = new()
-        {
-            OwnerPeerId = Plugin.client.ClientPeerId,
-            NetId = netId,
-            Action = actionID
-        };
+        ObjectAction action = NetMessagePool.Get<ObjectAction>();
+        action.OwnerPeerId = Plugin.client.ClientPeerId;
+        action.NetId = netId;
+        action.Action = actionID;
         SendMsg(action);
     }
 

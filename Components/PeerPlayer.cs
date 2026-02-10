@@ -140,13 +140,11 @@ public class PeerPlayer : NetworkedBehaviour
     // Send position to all connected peers
     public override void Sync()
     {
-        Movement msg = new()
-        {
-            OwnerPeerId = peerId,
-            NetId = netId,
-            OldPosition = OldPosition,
-            NewPosition = transform.position
-        };
+        Movement msg = NetMessagePool.Get<Movement>();
+        msg.OwnerPeerId = peerId;
+        msg.NetId = netId;
+        msg.OldPosition = OldPosition;
+        msg.NewPosition = transform.position;
         SendMsg(msg);
 
         base.Sync();
