@@ -34,7 +34,7 @@ public class Plugin : BaseUnityPlugin
     }
 
     // Maps scene ID to map of netId to NetworkedBehaviour
-    public static Dictionary<string, Dictionary<NetId, NetworkedBehaviour>> NetworkedObjects = [];
+    public static Dictionary<string, Dictionary<NetId, NetBehaviour>> NetworkedObjects = [];
     // Maps peers to the scene they are in.
     public static Dictionary<PeerId, string> PeerScenes = [];
 
@@ -63,7 +63,7 @@ public class Plugin : BaseUnityPlugin
 
         // Apply patches
         Harmony.CreateAndPatchAll(typeof(Plugin));
-        Harmony.CreateAndPatchAll(typeof(TreeManager));
+        Harmony.CreateAndPatchAll(typeof(NetTreeManager));
         Harmony.CreateAndPatchAll(typeof(NetCropManager));
         Harmony.CreateAndPatchAll(typeof(NetTileMapManager));
 
@@ -114,7 +114,7 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    public static void ChangeNetObjectScene(NetworkedBehaviour netObj, string oldScene, string newScene)
+    public static void ChangeNetObjectScene(NetBehaviour netObj, string oldScene, string newScene)
     {
         Logger.LogInfo($"Changing net object netId {netObj.netId} {netObj.name} from scene {oldScene} to scene {newScene}");
 
@@ -125,16 +125,16 @@ public class Plugin : BaseUnityPlugin
         RegisterNetObject(netObj, newScene);
     }
 
-    public static void RegisterNetObject(NetworkedBehaviour netObj, string scene)
+    public static void RegisterNetObject(NetBehaviour netObj, string scene)
     {
         if (!NetworkedObjects.ContainsKey(scene))
         {
-            NetworkedObjects[scene] = new Dictionary<NetId, NetworkedBehaviour>();
+            NetworkedObjects[scene] = new Dictionary<NetId, NetBehaviour>();
         }
         NetworkedObjects[scene][netObj.netId] = netObj;
     }
 
-    public static void UnregisterNetObject(NetworkedBehaviour netObj, string scene)
+    public static void UnregisterNetObject(NetBehaviour netObj, string scene)
     {
         Logger.LogInfo($"Unregistering net object netId {netObj.netId} {netObj.name} from scene {scene}");
         var sceneObjects = NetworkedObjects[scene];
@@ -148,11 +148,11 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    public static NetworkedBehaviour GetByNetID(NetId netId)
+    public static NetBehaviour GetByNetID(NetId netId)
     {
         foreach (var sceneObjects in NetworkedObjects.Values)
         {
-            if (sceneObjects.TryGetValue(netId, out NetworkedBehaviour netObj))
+            if (sceneObjects.TryGetValue(netId, out NetBehaviour netObj))
             {
                 return netObj;
             }
@@ -160,18 +160,18 @@ public class Plugin : BaseUnityPlugin
         return null;
     }
 
-    public static Dictionary<NetId, NetworkedBehaviour> GetCurrentSceneNetworkedObjects()
+    public static Dictionary<NetId, NetBehaviour> GetCurrentSceneNetworkedObjects()
     {
         if (!NetworkedObjects.ContainsKey(Client.CurrentSceneID))
         {
-            NetworkedObjects[Client.CurrentSceneID] = new Dictionary<NetId, NetworkedBehaviour>();
+            NetworkedObjects[Client.CurrentSceneID] = new Dictionary<NetId, NetBehaviour>();
         }
         return NetworkedObjects[Client.CurrentSceneID];
     }
 
-    public static List<NetworkedBehaviour> GetOwnedSceneObjects()
+    public static List<NetBehaviour> GetOwnedSceneObjects()
     {
-        List<NetworkedBehaviour> ownedObjects = new List<NetworkedBehaviour>();
+        List<NetBehaviour> ownedObjects = new List<NetBehaviour>();
         var sceneObjects = GetCurrentSceneNetworkedObjects();
         foreach (var netObj in sceneObjects.Values)
         {
@@ -198,7 +198,7 @@ public class Plugin : BaseUnityPlugin
         // Update networked objects of the current scene
         // Only the owners of objects are expected to mark them as dirty,
         // thus this syncs the client's objects to server
-        Dictionary<NetId, NetworkedBehaviour> currentSceneObjects = GetCurrentSceneNetworkedObjects();
+        Dictionary<NetId, NetBehaviour> currentSceneObjects = GetCurrentSceneNetworkedObjects();
         foreach (var netObj in currentSceneObjects.Values)
         {
             if (netObj.IsDirty)

@@ -7,11 +7,11 @@ using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop.Components;
 
-public class NetCropObject : NetworkedBehaviour
+public class NetCropObject : WrappedNetBehaviour<CropObject>
 {
     public override string NetTypeID => "CropObject";
 
-    public CropObject Crop => GetComponent<CropObject>(); // TODO cache
+    public CropObject Crop => WrappedComponent;
 
     public override void OnAction(ObjectAction action)
     {

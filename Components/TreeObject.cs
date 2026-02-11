@@ -6,19 +6,19 @@ using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop.Components;
 
-public class TreeObject : NetworkedBehaviour
+public class NetTreeObject : WrappedNetBehaviour<TreeObject>
 {
     public override string NetTypeID => "TreeObject";
 
-    public global::TreeObject Tree => GetComponent<global::TreeObject>(); // TODO cache
+    public TreeObject Tree => WrappedComponent;
 
     public override void OnAction(ObjectAction action)
     {
         if (action.Action == "UseAxe")
         {
-            TreeManager.ignoreHooks = true;
+            NetTreeManager.ignoreHooks = true;
             Tree.UseAxe(1, 0); // TODO this has side effects on player; replace!
-            TreeManager.ignoreHooks = false;
+            NetTreeManager.ignoreHooks = false;
         }
     }
 
@@ -109,11 +109,11 @@ public class TreeObject : NetworkedBehaviour
         return data;
     }
 
-    public static TreeObject Instantiate()
+    public static NetTreeObject Instantiate()
     {
-        PersistentTreeManager treeManager = GameObject.FindObjectOfType<PersistentTreeManager>(); // TODO cache all these singletons that the game does not
-        GameObject prefab = GetField<GameObject>(treeManager, "treeObjPrefab");
+        PersistentTreeManager NetTreeManager = GameObject.FindObjectOfType<PersistentTreeManager>(); // TODO cache all these singletons that the game does not
+        GameObject prefab = GetField<GameObject>(NetTreeManager, "treeObjPrefab");
         GameObject instance = GameObject.Instantiate(prefab);
-        return instance.AddComponent<TreeObject>();
+        return instance.AddComponent<NetTreeObject>();
     }
 }

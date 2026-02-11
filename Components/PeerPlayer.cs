@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GrimshireCoop;
 
-public class PeerPlayer : NetworkedBehaviour
+public class PeerPlayer : NetBehaviour
 {
     public override string NetTypeID => "PeerPlayer";
 

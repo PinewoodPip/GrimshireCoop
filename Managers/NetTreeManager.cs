@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace GrimshireCoop;
 
-public static class TreeManager
+public static class NetTreeManager
 {
     public static bool ignoreHooks = false;
 
@@ -22,7 +22,7 @@ public static class TreeManager
         if (Plugin.IsHost)
         {
             // Create networked object
-            Client.CreateNetObject<Components.TreeObject>(__instance.gameObject);
+            Client.CreateNetObject<Components.NetTreeObject>(__instance.gameObject);
         }
     }
 
@@ -33,7 +33,7 @@ public static class TreeManager
         if (ignoreHooks) return;
 
         // Send action msg
-        Components.TreeObject netObj = __instance.GetComponent<Components.TreeObject>();
+        Components.NetTreeObject netObj = __instance.GetComponent<Components.NetTreeObject>();
         if (netObj)
         {
             ObjectAction action = NetMessagePool.Get<ObjectAction>();

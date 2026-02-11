@@ -9,7 +9,7 @@ using static GrimshireCoop.Utils;
 
 namespace GrimshireCoop;
 
-public class ClientPlayer : NetworkedBehaviour
+public class ClientPlayer : NetBehaviour
 {
     public override string NetTypeID => "ClientPlayer";
 

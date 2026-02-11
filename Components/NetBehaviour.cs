@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 namespace GrimshireCoop;
 
-public abstract class NetworkedBehaviour : MonoBehaviour
+public abstract class NetBehaviour : MonoBehaviour
 {
     public abstract string NetTypeID { get; }
 
@@ -66,6 +66,15 @@ public abstract class NetworkedBehaviour : MonoBehaviour
         action.OwnerPeerId = Plugin.client.ClientPeerId;
         action.NetId = netId;
         action.Action = actionID;
+        SendMsg(action);
+    }
+    public void SendActionMsg(string actionID, Vector2 position)
+    {
+        ObjectPositionedAction action = NetMessagePool.Get<ObjectPositionedAction>();
+        action.OwnerPeerId = Plugin.client.ClientPeerId;
+        action.NetId = netId;
+        action.Action = actionID;
+        action.Position = position;
         SendMsg(action);
     }
 

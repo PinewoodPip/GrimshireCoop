@@ -17,7 +17,7 @@ public static class PlayerHandlers
     
     public static void HandleToolUsedMsg(Client client, ToolUsed msg)
     {
-        NetworkedBehaviour netObj = client.GetByNetID(msg.NetId);
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
         if (netObj is PeerPlayer toolUserPeerPlayer)
         {
             toolUserPeerPlayer.PlayToolUseAnimation(msg.ToolId);
@@ -30,7 +30,7 @@ public static class PlayerHandlers
 
     public static void HandleSetHeldItemMsg(Client client, SetHeldItem msg)
     {
-        NetworkedBehaviour netObj = client.GetByNetID(msg.NetId);
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
         if (netObj is PeerPlayer heldItemPeerPlayer)
         {
             heldItemPeerPlayer.SetHeldItem(msg.ItemId);

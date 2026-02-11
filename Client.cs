@@ -32,7 +32,7 @@ public class Client
 
     private NetManager netManager;
     private Dictionary<Type, Action<Client, Message>> messageHandlers = [];
-    private Dictionary<string, Func<int, NetworkedBehaviour>> netObjectCreators = [];
+    private Dictionary<string, Func<int, NetBehaviour>> netObjectCreators = [];
 
     public Client()
     {
@@ -89,7 +89,7 @@ public class Client
             }
 
             // Fetch the target net object if applicable
-            NetworkedBehaviour netObj = null;
+            NetBehaviour netObj = null;
             if (msg is NetObjectMessage netObjectMsg)
             {
                 netObj = GetByNetID(netObjectMsg.NetId);
@@ -109,9 +109,9 @@ public class Client
         };
     }
     
-    private NetworkedBehaviour CreateGameObjectByType(string gameObjectId, PeerId ownerPeerId)
+    private NetBehaviour CreateGameObjectByType(string gameObjectId, PeerId ownerPeerId)
     {
-        NetworkedBehaviour netObj = null;
+        NetBehaviour netObj = null;
         if (netObjectCreators.TryGetValue(gameObjectId, out var creator))
         {
             netObj = creator(ownerPeerId);
@@ -135,7 +135,7 @@ public class Client
     /// Registers a factory method for instantiating a NetworkedBehaviour.
     /// </summary>
     /// <param name="creator">First param is owner peer ID.</param>
-    public void RegisterNetObjectCreator(string gameObjectId, Func<PeerId, NetworkedBehaviour> creator)
+    public void RegisterNetObjectCreator(string gameObjectId, Func<PeerId, NetBehaviour> creator)
     {
         netObjectCreators[gameObjectId] = creator;
     }
@@ -146,7 +146,7 @@ public class Client
         RegisterNetObjectCreator("PeerPlayer", ownerPeerId => {
             return ownerPeerId == ClientPeerId ? ClientPlayer.Instantiate() : PeerPlayer.Instantiate();
         });
-        RegisterNetObjectCreator("TreeObject", ownerPeerId => Components.TreeObject.Instantiate());
+        RegisterNetObjectCreator("TreeObject", ownerPeerId => Components.NetTreeObject.Instantiate());
         RegisterNetObjectCreator("CropObject", ownerPeerId => Components.NetCropObject.Instantiate());
     }
 
@@ -175,7 +175,7 @@ public class Client
             return;
         }
         Log($"Replicating object netId {msg.NetId} of type {msg.GameObjectId} from peer {msg.OwnerPeerId}");
-        NetworkedBehaviour replicatedObj = CreateNetworkedObject(new CreateGameObject
+        NetBehaviour replicatedObj = CreateNetworkedObject(new CreateGameObject
         {
             GameObjectId = msg.GameObjectId,
             NetId = msg.NetId,
@@ -245,9 +245,9 @@ public class Client
         }
     }
 
-    private NetworkedBehaviour CreateNetworkedObject(Messages.Client.CreateGameObject createGameObjectMsg)
+    private NetBehaviour CreateNetworkedObject(Messages.Client.CreateGameObject createGameObjectMsg)
     {
-        NetworkedBehaviour netObj = CreateGameObjectByType(createGameObjectMsg.GameObjectId, createGameObjectMsg.OwnerPeerId);
+        NetBehaviour netObj = CreateGameObjectByType(createGameObjectMsg.GameObjectId, createGameObjectMsg.OwnerPeerId);
 
         // Initialize ownership and position
         netObj.SetPeerID(createGameObjectMsg.OwnerPeerId);
@@ -266,7 +266,7 @@ public class Client
         return netObj;    
     }
 
-    public static T CreateNetObject<T>(GameObject originalObj) where T : NetworkedBehaviour
+    public static T CreateNetObject<T>(GameObject originalObj) where T : NetBehaviour
     {
         T netObj = WrapNetObject(originalObj.AddComponent<T>(), Client.Instance.ClientPeerId, Plugin.NextFreeNetId) as T; // TODO have this consume the next free netId from the plugin
         ReplicateObject msg = NetMessagePool.Get<ReplicateObject>();
@@ -283,13 +283,13 @@ public class Client
     }
 
     // Wraps an existing object with a networked behaviour or returns its existing net behaviour.
-    public static T TryCreateNetObject<T>(GameObject originalObj) where T : NetworkedBehaviour
+    public static T TryCreateNetObject<T>(GameObject originalObj) where T : NetBehaviour
     {
         T existingNetObj = originalObj.GetComponent<T>();
         return existingNetObj ?? CreateNetObject<T>(originalObj);
     }
 
-    private static NetworkedBehaviour WrapNetObject(NetworkedBehaviour netObj, PeerId ownerPeerId, NetId netId)
+    private static NetBehaviour WrapNetObject(NetBehaviour netObj, PeerId ownerPeerId, NetId netId)
     {
         netObj.SetPeerID(ownerPeerId);
         netObj.netId = netId;
@@ -307,7 +307,7 @@ public class Client
         Plugin.client.ServerPeer.Send(writer, DeliveryMethod.ReliableOrdered);
     }
 
-    public NetworkedBehaviour GetByNetID(NetId netId)
+    public NetBehaviour GetByNetID(NetId netId)
     {
         return Plugin.GetByNetID(netId);
     }

@@ -20,13 +20,13 @@ public static class GameObjectHandlers
 
     private static void HandlePositionMsg(Client client, Position msg)
     {
-        NetworkedBehaviour netObj = client.GetByNetID(msg.NetId);
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
         netObj.transform.position = msg.Pos;
     }
 
     private static void HandleMovementMsg(Client client, Movement msg)
     {
-        NetworkedBehaviour netObj = client.GetByNetID(msg.NetId);
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
 
         // Animate - should be done before setting pos so the facing dir vector is correct
         if (netObj is PeerPlayer peerPlayer)
@@ -39,7 +39,7 @@ public static class GameObjectHandlers
 
     private static void HandleStoppedMovingMsg(Client client, StoppedMoving msg)
     {
-        NetworkedBehaviour netObj = client.GetByNetID(msg.NetId);
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
         if (netObj is PeerPlayer stoppedPeerPlayer)
         {
             stoppedPeerPlayer.OnStoppedMoving();
@@ -48,7 +48,7 @@ public static class GameObjectHandlers
 
     private static void HandleFaceDirectionMsg(Client client, FaceDirection msg)
     {
-        NetworkedBehaviour netObj = client.GetByNetID(msg.NetId);
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
         if (netObj is PeerPlayer facingPeerPlayer)
         {
             facingPeerPlayer.FaceTowards(new Vector2(msg.PosX, msg.PosY));
@@ -57,7 +57,7 @@ public static class GameObjectHandlers
 
     private static void HandleObjectActionMsg(Client client, ObjectAction msg)
     {
-        NetworkedBehaviour netObj = client.GetByNetID(msg.NetId);
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
         netObj.OnAction(msg);
     }
 }
