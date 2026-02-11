@@ -26,21 +26,25 @@ public static class NetTreeManager
         }
     }
 
+    // Sync axe hits
     [HarmonyPatch(typeof(TreeObject), "UseAxe")]
     [HarmonyPostfix]
     static void TreeObjectUseAxe(TreeObject __instance, int axeTier, int value)
     {
         if (ignoreHooks) return;
 
-        // Send action msg
         Components.NetTreeObject netObj = __instance.GetComponent<Components.NetTreeObject>();
-        if (netObj)
-        {
-            ObjectAction action = NetMessagePool.Get<ObjectAction>();
-            action.OwnerPeerId = Plugin.client.ClientPeerId;
-            action.NetId = netObj.netId;
-            action.Action = "UseAxe";
-            netObj.SendMsg(action);
-        }
+        netObj?.SendActionMsg("UseAxe");
+    }
+
+    // Sync shaking
+    [HarmonyPatch(typeof(TreeObject), "ShakeTree")]
+    [HarmonyPostfix]
+    static void AfterTreeObjectShakeTree(TreeObject __instance)
+    {
+        if (ignoreHooks) return;
+
+        Components.NetTreeObject netObj = __instance.GetComponent<Components.NetTreeObject>();
+        netObj?.SendActionMsg("Shake");
     }
 }

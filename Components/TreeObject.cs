@@ -14,12 +14,17 @@ public class NetTreeObject : WrappedNetBehaviour<TreeObject>
 
     public override void OnAction(ObjectAction action)
     {
-        if (action.Action == "UseAxe")
+        NetTreeManager.ignoreHooks = true;
+        switch (action.Action)
         {
-            NetTreeManager.ignoreHooks = true;
-            Tree.UseAxe(1, 0); // TODO this has side effects on player; replace!
-            NetTreeManager.ignoreHooks = false;
+            case "UseAxe":
+                Tree.UseAxe(1, 0); // TODO this has side effects on player; replace!
+                break;
+            case "Shake":
+                CallMethod(Tree, "ShakeTree");
+                break;
         }
+        NetTreeManager.ignoreHooks = false;
     }
 
     public override byte[] GetReplicationData()
