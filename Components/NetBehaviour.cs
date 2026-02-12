@@ -98,6 +98,18 @@ public abstract class NetBehaviour : MonoBehaviour
         
     }
 
+    /// <summary>
+    /// Destroys the object locally and notifies peers to destroy it on their end as well.
+    /// </summary>
+    public void NetDestroy()
+    {
+        DestroyObject msg = NetMessagePool.Get<DestroyObject>();
+        msg.OwnerPeerId = Client.ClientPeerId;
+        msg.NetId = netId;
+        SendMsg(msg);
+        Object.Destroy(gameObject);
+    }
+
     private void OnDestroy()
     {
         if (!Unregistered)

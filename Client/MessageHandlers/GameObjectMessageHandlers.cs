@@ -16,6 +16,9 @@ public static class GameObjectHandlers
         client.RegisterMessageHandler<Position>(HandlePositionMsg);
         client.RegisterMessageHandler<FaceDirection>(HandleFaceDirectionMsg);
         client.RegisterMessageHandler<ObjectAction>(HandleObjectActionMsg);
+        client.RegisterMessageHandler<RequestItemPickup>(HandleRequestItemPickupMsg);
+        client.RegisterMessageHandler<PickupItem>(HandlePickupItemMsg);
+        client.RegisterMessageHandler<DestroyObject>(HandleDestroyObjectMsg);
     }
 
     private static void HandlePositionMsg(Client client, Position msg)
@@ -59,5 +62,39 @@ public static class GameObjectHandlers
     {
         NetBehaviour netObj = client.GetByNetID(msg.NetId);
         netObj.OnAction(msg);
+    }
+
+    private static void HandleRequestItemPickupMsg(Client client, RequestItemPickup msg)
+    {
+        // Approve requests to peers pickup items this client owns
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
+        if (netObj != null && netObj.peerId == client.ClientPeerId)
+        {
+            var netVacuumItem = netObj as Components.NetVacuumItem;
+            netVacuumItem.HandlePickupRequest(msg.OwnerPeerId);
+        }
+    }
+
+    private static void HandlePickupItemMsg(Client client, PickupItem msg)
+    {
+        // Pickup the item locally
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
+        if (netObj != null && netObj is Components.NetVacuumItem netVacuumItem && netObj.peerId == msg.OwnerPeerId)
+        {
+            netVacuumItem.Pickup();
+        }
+    }
+
+    private static void HandleDestroyObjectMsg(Client client, DestroyObject msg)
+    {
+        NetBehaviour netObj = client.GetByNetID(msg.NetId);
+        if (netObj != null)
+        {
+            Object.Destroy(netObj.gameObject);
+        }
+        else
+        {
+            Client.LogWarning($"Received DestroyObject for nonexistent object {msg.NetId}");
+        }
     }
 }

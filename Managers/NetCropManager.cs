@@ -7,6 +7,7 @@ namespace GrimshireCoop;
 public static class NetCropManager
 {
     public static bool ignoreHooks = false;
+    public static bool isSynchingInteraction = false;
 
     [HarmonyPatch(typeof(CropManager), "LoadCrops")]
     [HarmonyPrefix]
@@ -31,5 +32,13 @@ public static class NetCropManager
         // Send action msg
         NetCropObject netObj = __instance.GetComponent<NetCropObject>();
         netObj?.SendInteractionMsg();
+    }
+
+    // Prevent synching harvest interactions with crops from causing duplicate item spawns. 
+    [HarmonyPatch(typeof(CropObject), "SpawnDrops")]
+    [HarmonyPrefix]
+    static bool OnCropObjectSpawnDrops(CropObject __instance, CropData.ItemDrops[] itemDropsList)
+    {
+        return !ignoreHooks;
     }
 }

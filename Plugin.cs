@@ -7,6 +7,7 @@ using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine.SceneManagement;
+using GrimshireCoop.Components;
 
 namespace GrimshireCoop;
 
@@ -51,9 +52,12 @@ public class Plugin : BaseUnityPlugin
         { "Client.ObjectPositionedAction", typeof(Messages.Client.ObjectPositionedAction) },
         { "Client.SceneChanged", typeof(Messages.Client.SceneChanged) },
         { "Client.ReplicateObject", typeof(Messages.Client.ReplicateObject) },
+        { "Client.DestroyObject", typeof(Messages.Client.DestroyObject) },
         { "Host.SetRandomSeed", typeof(Messages.Host.SetRandomSeed) },
         { "Client.TileMapAction", typeof(Messages.Client.TileMapAction) },
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
+        { "Client.RequestItemPickup", typeof(Messages.Client.RequestItemPickup) },
+        { "Client.PickupItem", typeof(Messages.Client.PickupItem) },
     };
 
     private void Awake()
@@ -66,6 +70,7 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(NetTreeManager));
         Harmony.CreateAndPatchAll(typeof(NetCropManager));
         Harmony.CreateAndPatchAll(typeof(NetTileMapManager));
+        Harmony.CreateAndPatchAll(typeof(NetVacuumItem));
 
         SceneManager.sceneLoaded += (scene, mode) =>
         {

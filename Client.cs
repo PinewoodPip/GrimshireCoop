@@ -148,6 +148,7 @@ public class Client
         });
         RegisterNetObjectCreator("TreeObject", ownerPeerId => Components.NetTreeObject.Instantiate());
         RegisterNetObjectCreator("CropObject", ownerPeerId => Components.NetCropObject.Instantiate());
+        RegisterNetObjectCreator("VacuumItem", ownerPeerId => Components.NetVacuumItem.Instantiate());
     }
 
     private void RegisterSystemMessageHandlers()
