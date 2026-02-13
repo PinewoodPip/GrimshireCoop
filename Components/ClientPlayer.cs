@@ -53,16 +53,17 @@ public class ClientPlayer : NetBehaviour
     private void OnSceneChanged(Scene oldScene, Scene newScene)
     {
         string oldSceneName = CurrentSceneName;
-        Debug.Log($"ClientPlayer detected scene change from {oldSceneName} to {newScene.name}");
-        // oldScene.name is null? WTF? TODO
+
+        Plugin.PeerScenes[peerId] = newScene.name;
+
         // Send scene change message
-        Plugin.ChangeNetObjectScene(this, oldSceneName, newScene.name);
-        SceneChanged msg = NetMessagePool.Get<SceneChanged>();
-        msg.OwnerPeerId = peerId;
-        msg.SceneId = newScene.name;
-        msg.ClientPlayerNetId = Client.ClientPlayerNetId;
-        msg.Position = player.transform.position;
-        SendMsg(msg);
+        Plugin.ChangeNetObjectScene(this, oldSceneName, newScene.name); // oldScene.name is null, possibly due to it technically being the DontDestroyOnLoad scene?
+        SceneChanged sceneChangedMsg = NetMessagePool.Get<SceneChanged>();
+        sceneChangedMsg.OwnerPeerId = peerId;
+        sceneChangedMsg.SceneId = newScene.name;
+        sceneChangedMsg.ClientPlayerNetId = Client.ClientPlayerNetId;
+        sceneChangedMsg.Position = player.transform.position;
+        SendMsg(sceneChangedMsg);
         CurrentSceneName = newScene.name;
     }
 

@@ -12,6 +12,7 @@ using LiteNetLib.Utils;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static GrimshireCoop.Utils;
+using HarmonyLib;
 
 namespace GrimshireCoop;
 
@@ -160,11 +161,14 @@ public class Client
         RegisterMessageHandler<CreateGameObject>((client, msg) => HandleCreateGameObjectMsg(msg));
         RegisterMessageHandler<SetRandomSeed>((client, msg) => HandleSetRandomSeedMsg(msg));
         RegisterMessageHandler<SceneChanged>((client, msg) => HandleSceneChangedMsg(msg));
+        RegisterMessageHandler<RequestChangeOwnership>((client, msg) => HandleChangeOwnership(msg));
     }
 
     private void HandleAssignPeerIdMsg(AssignPeerId msg)
     {
         ClientPeerId = msg.PeerId;
+        Plugin.PeerScenes = msg.PeerScenes;
+        Plugin.PeerScenes[ClientPeerId] = CurrentSceneID;
         Log($"Assigned Client Peer ID: {ClientPeerId}");
     }
 
@@ -187,9 +191,62 @@ public class Client
         replicatedObj.ApplyReplicationData(msg.ReplicationData);
     }
 
+    // Handle the client player changing scenes.
+    [HarmonyPatch(typeof(GrimHarvestSceneManager), "LoadScene")]
+    [HarmonyPrefix]
+    static bool OnGrimHarvestSceneManagerLoadScene(string sceneName, int mineFloorToLoad)
+    {
+        string oldSceneName = SceneManager.GetActiveScene().name;
+        Log($"Changing scene from {oldSceneName} to {sceneName}");
+        
+        // Request ownership change for all objects owned by this client in the old scene
+        var oldSceneObjects = Plugin.GetOwnedSceneObjects(oldSceneName);
+        foreach (var netObj in oldSceneObjects)
+        {
+            if (netObj is ClientPlayer) continue;
+            RequestChangeOwnership ownershipMsg = NetMessagePool.Get<RequestChangeOwnership>();
+            ownershipMsg.NetId = netObj.netId;
+            ownershipMsg.OwnerPeerId = Instance.ClientPeerId;
+            ownershipMsg.SceneId = oldSceneName;
+            SendMsg(ownershipMsg);
+        }
+        return true;
+    }
+
     private void HandleCreateGameObjectMsg(CreateGameObject msg)
     {
         CreateNetworkedObject(msg);
+    }
+
+    private void HandleChangeOwnership(RequestChangeOwnership msg)
+    {
+        var sceneObjects = Plugin.GetSceneNetworkedObjects(msg.SceneId);
+        if (!sceneObjects.TryGetValue(msg.NetId, out NetBehaviour netObj))
+        {
+            LogWarning($"NetId {msg.NetId} not found in scene {msg.SceneId} when trying to change ownership");
+            return;
+        }
+
+        // Reassign the netobject to the client with the lowest peer ID still in that scene
+        PeerId? newOwner = null;
+        foreach (var kvp in Plugin.PeerScenes)
+        {
+            PeerId peerId = kvp.Key;
+            string peerScene = kvp.Value;
+            if (peerScene == msg.SceneId && peerId != msg.OwnerPeerId && (!newOwner.HasValue || peerId < newOwner.Value))
+            {
+                newOwner = peerId;
+            }
+        }
+        if (newOwner.HasValue)
+        {
+            netObj.peerId = newOwner.Value;
+            Log($"Changed ownership of NetId {msg.NetId} in scene {msg.SceneId} from peer {msg.OwnerPeerId} to peer {newOwner.Value}");
+        }
+        else
+        {
+            Log($"No available peers in scene {msg.SceneId} to take ownership of NetId {msg.NetId}");
+        }
     }
 
     private void HandleSetRandomSeedMsg(SetRandomSeed msg)

@@ -58,6 +58,7 @@ public class Plugin : BaseUnityPlugin
         { "Server.AssignPeerId", typeof(Messages.Server.AssignPeerId) },
         { "Client.RequestItemPickup", typeof(Messages.Client.RequestItemPickup) },
         { "Client.PickupItem", typeof(Messages.Client.PickupItem) },
+        { "Client.RequestChangeOwnership", typeof(Messages.Client.RequestChangeOwnership) },
     };
 
     private void Awake()
@@ -74,6 +75,7 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(NetCropManager));
         Harmony.CreateAndPatchAll(typeof(NetTileMapManager));
         Harmony.CreateAndPatchAll(typeof(NetVacuumItem));
+        Harmony.CreateAndPatchAll(typeof(Client));
 
         SceneManager.sceneLoaded += (scene, mode) =>
         {
@@ -177,10 +179,19 @@ public class Plugin : BaseUnityPlugin
         return NetworkedObjects[Client.CurrentSceneID];
     }
 
-    public static List<NetBehaviour> GetOwnedSceneObjects()
+    public static Dictionary<NetId, NetBehaviour> GetSceneNetworkedObjects(string scene)
+    {
+        if (!NetworkedObjects.ContainsKey(scene))
+        {
+            NetworkedObjects[scene] = new Dictionary<NetId, NetBehaviour>();
+        }
+        return NetworkedObjects[scene];
+    }
+
+    public static List<NetBehaviour> GetOwnedSceneObjects(string sceneId)
     {
         List<NetBehaviour> ownedObjects = new List<NetBehaviour>();
-        var sceneObjects = GetCurrentSceneNetworkedObjects();
+        var sceneObjects = GetSceneNetworkedObjects(sceneId);
         foreach (var netObj in sceneObjects.Values)
         {
             if (netObj.peerId == client.ClientPeerId)
@@ -189,6 +200,10 @@ public class Plugin : BaseUnityPlugin
             }
         }
         return ownedObjects;
+    }
+    public static List<NetBehaviour> GetOwnedSceneObjects()
+    {
+        return GetOwnedSceneObjects(Client.CurrentSceneID);
     }
 
     // TODO move to some dedicated shared object manager class
