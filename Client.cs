@@ -72,15 +72,16 @@ public class Client
 
         listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod, channel) =>
         {
-            Log($"Received data from server: {dataReader.AvailableBytes} bytes");
-
             var msgType = dataReader.GetString(100);
             Type msgClass = Plugin.MessageTypes[msgType];
 
             Message msg = Activator.CreateInstance(msgClass, dataReader) as Message;
             
             // Handle the message
-            Log($"Deserialized message of type: {msg.MessageType}");
+            if (LoggingConfig.Instance.ShouldLogNetMsg(msg.MessageType))
+            {
+                Log($"Deserialized message of type: {msg.MessageType}");
+            }
 
             // Sanity check for sync direction
             if (msg.SyncDirection == Message.Direction.ClientToServer)

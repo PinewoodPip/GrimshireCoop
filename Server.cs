@@ -136,7 +136,10 @@ public class Server : INetEventListener
             {
                 msg.Serialize(writer);
                 peer.Send(writer, DeliveryMethod.ReliableOrdered);
-                LogServer($"Forwarded message {msg.MessageType} to peer {peer.Id}");
+                if (LoggingConfig.Instance.ShouldLogNetMsg(msg.MessageType))
+                {
+                    LogServer($"Forwarded message {msg.MessageType} to peer {peer.Id}");
+                }
             }
         }
     }
@@ -154,8 +157,6 @@ public class Server : INetEventListener
 
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
     {
-        LogServer($"Server received data from client {peer.Id} bytes {reader.AvailableBytes}");
-
         // Parse the message
         try
         {
@@ -184,7 +185,10 @@ public class Server : INetEventListener
                 }
                 
                 // Handle client-to-server messages
-                LogServer($"Deserialized message of type: {msg.MessageType}");
+                if (LoggingConfig.Instance.ShouldLogNetMsg(msg.MessageType))
+                {
+                    LogServer($"Deserialized message of type: {msg.MessageType}");
+                }
                 switch (msg)
                 {
                     // Placeholder as there are no non-forwarded client-to-server messages yet.

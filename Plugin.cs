@@ -65,6 +65,9 @@ public class Plugin : BaseUnityPlugin
         Logger = base.Logger;
         Logger.LogInfo($"{MyPluginInfo.PLUGIN_GUID} is loaded!");
 
+        // Initialize logging config
+        LoggingConfig.Initialize();
+
         // Apply patches
         Harmony.CreateAndPatchAll(typeof(Plugin));
         Harmony.CreateAndPatchAll(typeof(NetTreeManager));
